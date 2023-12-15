@@ -9,6 +9,9 @@ class BluetoothCallback:
 
     async def notify_callback(self, sender, data):
         # Assuming data is received from the Bluetooth device
+        print(data)
+
+        '''
         if struct.pack("@h", 1) == struct.pack("<h", 1):
             data = data[::-1]  # Reverse the byte order if little-endian
 
@@ -20,6 +23,7 @@ class BluetoothCallback:
         print(output)
 
         self.received_data = output
+        '''
 
 
 device_name = "HEADWIND BC55"  # Replace with the name of your desired BLE device
@@ -63,8 +67,8 @@ async def scan_and_connect():
     if(DEVICEID != ""):
         # Connecting to BLE Device
         # print("DEVICEID: ",DEVICEID.address)
-        async with BleakClient(DEVICEID.address, timeout=120) as client:
-            # logger.info("Device ID ", device_id)
+        async with BleakClient(DEVICEID, timeout=120) as client:
+            print("Device ID ", DEVICEID)
             for service in client.services:
                 # print("service: ", service)
                  
@@ -83,8 +87,28 @@ async def scan_and_connect():
                             # print("CHARACTERISTIC: ", characteristic, characteristic.properties)
 
                             if ("write-without-response" in characteristic.properties):
-                                await client.write_gatt_char(CHARACTERISTIC, bytearray([0x04, 0x04])) 
-                                # await client.write_gatt_char(CHARACTERISTIC, bytearray([0x02, 100])) # working if the fan is turned on and the script starting again
+                                await client.write_gatt_char(CHARACTERISTIC, bytearray([0x04, 0x01])) # Turns fan on -> bytearray([0x04, 0x04]), Turns fan off -> bytearray([0x04, 0x01]), Adjust fan Speed -> bytearray([0x02, <Decimalvalue between 1 and 100>])
+
+                                if ("notify" in characteristic.properties):
+                               
+                                    bluetooth_callback = BluetoothCallback()
+                                    while True:
+                                        try:
+                                            
+                                            # value = await client.read_gatt_char(characteristic.uuid)
+                                            # print("Die CHARARARA iSt: ", CHARACTERISTIC, CHARACTERISTIC.properties)
+                                            # await client.start_notify(characteristic.uuid, on_notification)
+                                            await client.start_notify(characteristic.uuid, bluetooth_callback.notify_callback)
+                                            await asyncio.sleep(10) # keeps the connection open for 10 seconds
+                                            await client.stop_notify(characteristic.uuid)                                     
+                                            
+                                        except Exception as e:
+                                            print("Error: ", e)
+                                            # run_read_loop = False
+
+
+                                '''
+                                # await client.write_gatt_char(CHARACTERISTIC, bytearray([0x02, 50])) # working if the fan is turned on and the script starting again
                                 while True:
                                     speed_input = input("Enter a value between 1-100 to set the fan speed. Enter 0 to turn off the fan (or 'x' to exit): ")
                                     if speed_input.lower() == 'x':
@@ -103,6 +127,7 @@ async def scan_and_connect():
                                     except ValueError:
                                         print("Invalid input. Please enter a number between 1 and 100.")
                                 # bluetooth_callback = BluetoothCallback()
+                                '''
 
                                 
                                
