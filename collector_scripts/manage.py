@@ -1,4 +1,4 @@
-from readSpeed import BluetoothCallback
+from collector_scripts.read_speed import BluetoothCallback
 
 if __name__ == "__main__":
     # Create an instance of the BluetoothCallback class
