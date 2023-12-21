@@ -51,6 +51,8 @@ async def scan_and_connect():
                 print("service: ", service)
                 for characteristic in service.characteristics:
                     print("Characteristics: ",characteristic)
+
+                    #### To edit - currently cant write to the characteristic
             '''
             for service in client.services:
                 # print("service: ", service)

@@ -144,12 +144,10 @@ async def scan_and_connect():
                             CHARACTERISTIC = characteristic
                             print("CHARACTERISTIC: ", characteristic, characteristic.properties)
                             if ("notify" in characteristic.properties):
-                                run_read_loop = True
                                 bluetooth_callback = BluetoothCallback()
 
-                                while run_read_loop:
+                                while True:
                                     try:
-                                        
                                         # value = await client.read_gatt_char(characteristic.uuid)
                                         # print("Die CHARARARA iSt: ", CHARACTERISTIC, CHARACTERISTIC.properties)
                                         # await client.start_notify(characteristic.uuid, on_notification)
