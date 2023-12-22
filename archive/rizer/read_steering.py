@@ -21,10 +21,10 @@ class BluetoothCallback:
 device_name = "RIZER"
 DEVICEID = ""
 
-service_uuid = "347b0001-7635-408b-8918-8ff3949ce592" # Rizer
+service_uuid = "347b0001-7635-408b-8918-8ff3949ce592" # Rizer - read steering
 SERVICE = ""
 
-characteristic_uuid = "347b0030-7635-408b-8918-8ff3949ce592" # Rizer
+characteristic_uuid = "347b0030-7635-408b-8918-8ff3949ce592" # Rizer - read steering
 CHARACTERISTIC = ""
 
 value_to_write = ""

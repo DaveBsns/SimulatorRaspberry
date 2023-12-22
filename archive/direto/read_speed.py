@@ -6,14 +6,14 @@ class BluetoothCallback:
     def __init__(self):
         self.received_data = 0  # Initialize with None or any default value
 
-    async def notify_callback(self, sender, data):
+    async def notify_speed_callback(self, sender, data):
         # Assuming data is received from the Bluetooth device
         if struct.pack("@h", 1) == struct.pack("<h", 1):
             data = data[::-1]  # Reverse the byte order if little-endian
 
         result = struct.unpack_from(">h", data, 2)[0]
         output = result * 0.01
-        normalized_output = normalize(output, 0.0, 3.5)
+        normalized_output = normalize_speed_value(output, 0.0, 3.5)
 
         if output < 0:
             output = abs(output)
@@ -23,29 +23,23 @@ class BluetoothCallback:
 
 
 device_name = "DIRETO XR"
-# device_name = "Amazfit Bip U Pro"
 DEVICEID = ""
 
-service_uuid = "00001826-0000-1000-8000-00805f9b34fb" # Direto
-# service_uuid = "0000fee0-0000-1000-8000-00805f9b34fb" # "0000180f-0000-1000-8000-00805f9b34fb" # Amazfit
+service_uuid = "00001826-0000-1000-8000-00805f9b34fb" # Direto - Fitness Machine Service
 SERVICE = ""
 
 characteristic_uuid = "00002ad2-0000-1000-8000-00805f9b34fb" # Direto
-# characteristic_uuid = "00002a2b-0000-1000-8000-00805f9b34fb" # "00002a19-0000-1000-8000-00805f9b34fb" # Amazfit
 CHARACTERISTIC = ""
 
 value_to_write = ""
 old_value = ""
 
-run_read_loop = True
-is_first_entry = True
-
-def normalize(value, min_val, max_val):
+def normalize_speed_value(value, min_val, max_val):
     range_val = max_val - min_val
     normalized_value = (value - min_val) / range_val
     return normalized_value
 
-
+'''
 async def on_notification(sender, data):
     # collection = db["sensor_values"]  # Sammlungsname // outsourcen zur api
     # data = data[0]
@@ -62,13 +56,13 @@ async def on_notification(sender, data):
 
     result = struct.unpack_from(">h", data, 2)[0]
     output = result * 0.01
-    normalized_output = normalize(output, 0.0, 3.5)
+    normalized_output = normalize_speed_value(output, 0.0, 3.5)
 
     if output < 0:
         output = abs(output)
     print(normalized_output)
-
-    """
+'''
+'''
     if (value[6] != value_to_write):
         value_to_write = value[6]
         if(entry_id == None):
@@ -95,7 +89,7 @@ async def on_notification(sender, data):
         ",".join(characteristic.properties) ,
         # value[0],
     )
-    """
+'''
 
 async def scan_and_connect():
     global device_name
@@ -108,9 +102,6 @@ async def scan_and_connect():
 
     global value_to_write
     global old_value
-
-    global is_first_entry
-    global run_read_loop  
 
     stop_event = asyncio.Event()  
 
@@ -147,24 +138,16 @@ async def scan_and_connect():
                             CHARACTERISTIC = characteristic
                             print("CHARACTERISTIC: ", characteristic, characteristic.properties)
                             if ("notify" in characteristic.properties):
-                                run_read_loop = True
                                 bluetooth_callback = BluetoothCallback()
 
-                                while run_read_loop:
+                                while True:
                                     try:
-                                        
-                                        # value = await client.read_gatt_char(characteristic.uuid)
-                                        # print("Die CHARARARA iSt: ", CHARACTERISTIC, CHARACTERISTIC.properties)
-                                        # await client.start_notify(characteristic.uuid, on_notification)
-                                        await client.start_notify(characteristic.uuid, bluetooth_callback.notify_callback)
+                                        await client.start_notify(characteristic.uuid, bluetooth_callback.notify_speed_callback)
                                         await asyncio.sleep(10) # keeps the connection open for 10 seconds
                                         await client.stop_notify(characteristic.uuid)                                     
-                                        
+                           
                                     except Exception as e:
-                                        print("Error: ", e)
-                                        # run_read_loop = False                        
-                                   
-                                     
+                                        print("Error: ", e)                                    
 asyncio.run(scan_and_connect())
 
 

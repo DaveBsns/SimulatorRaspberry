@@ -1,11 +1,21 @@
 import asyncio
 from bleak import BleakScanner, BleakClient
 
+device_name = "RIZER"
+DEVICEID = ""
+
+service_uuid = "347b0001-7635-408b-8918-8ff3949ce592" # Rizer - read steering
+SERVICE = ""
+
+characteristic_steering_uuid = "347b0030-7635-408b-8918-8ff3949ce592" # Rizer - read steering
+CHARACTERISTIC_STEERING = ""
+
+
 class BluetoothCallback:
     def __init__(self):
         self.received_data = 0  # Initialize with None or any default value
 
-    async def notify_callback(self, sender, data):
+    async def notify_steering_callback(self, sender, data):
         data = bytearray(data)
         steering = 0.0
         
@@ -17,18 +27,17 @@ class BluetoothCallback:
         self.received_data = steering
         print(steering)
 
+async def read_steering(client, characteristic):
+    bluetooth_callback = BluetoothCallback()
+    try:
+        await client.start_notify(characteristic, bluetooth_callback.notify_steering_callback)
+        # await asyncio.sleep(10) # keeps the connection open for 10 seconds
+        # await client.stop_notify(characteristic.uuid) 
+        # print("Test steering")                                    
+    except Exception as e:
+        print("Error: ", e)                                    
 
-device_name = "RIZER"
-DEVICEID = ""
 
-service_uuid = "347b0001-7635-408b-8918-8ff3949ce592" # Rizer
-SERVICE = ""
-
-characteristic_uuid = "347b0030-7635-408b-8918-8ff3949ce592" # Rizer
-CHARACTERISTIC = ""
-
-value_to_write = ""
-old_value = ""
 
 async def scan_and_connect():
     global device_name
@@ -36,11 +45,8 @@ async def scan_and_connect():
     global service_uuid
     global SERVICE
 
-    global characteristic_uuid
-    global CHARACTERISTIC
-
-    global value_to_write
-    global old_value
+    global characteristic_steering_uuid
+    global CHARACTERISTIC_STEERING
 
     stop_event = asyncio.Event()  
 
@@ -65,29 +71,20 @@ async def scan_and_connect():
                 
                 if (service.uuid == service_uuid):
                         SERVICE = service
-                        print("[service uuid] ", SERVICE.uuid)
+                        # print("[service uuid] ", SERVICE.uuid)
                             
                 if (SERVICE != ""):
                     # print("SERVICE", SERVICE)
                     for characteristic in SERVICE.characteristics:
-                        # if ("notify" in characteristic.properties):
-                        print("[Characteristic] %s", characteristic, characteristic.properties)
                         
-                        if(characteristic.uuid == characteristic_uuid):
-                            CHARACTERISTIC = characteristic
-                            print("CHARACTERISTIC: ", characteristic, characteristic.properties)
-                            if ("notify" in characteristic.properties):
-                                bluetooth_callback = BluetoothCallback()
-
-                                while True:
-                                    try:
-                                        await client.start_notify(characteristic.uuid, bluetooth_callback.notify_callback)
-                                        await asyncio.sleep(10) # keeps the connection open for 10 seconds
-                                        await client.stop_notify(characteristic.uuid)                                     
-                                        
-                                    except Exception as e:
-                                        print("Error: ", e)                    
-                                   
+                        if("notify" in characteristic.properties and characteristic.uuid == characteristic_steering_uuid):
+                            CHARACTERISTIC_STEERING = characteristic
+                            #print("CHARACTERISTIC: ", CHARACTERISTIC_STEERING, characteristic.properties)
+                        
+                        
+                    while True:
+                        await read_steering(client, CHARACTERISTIC_STEERING)
+                           
                                      
 asyncio.run(scan_and_connect())
 
