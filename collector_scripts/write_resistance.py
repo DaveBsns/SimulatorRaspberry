@@ -13,10 +13,10 @@ class BluetoothCallback:
 device_name = "DIRETO XR"  # Replace with the name of your desired BLE device
 DEVICE = ""
 
-service_uuid = ""
+service_uuid = "00001826-0000-1000-8000-00805f9b34fb" # Direto XR
 SERVICE = ""
 
-characteristic_uuid = "" 
+characteristic_uuid = "00002ad9-0000-1000-8000-00805f9b34fb" # Direto XR
 CHARACTERISTIC = ""
 
 async def scan_and_connect():

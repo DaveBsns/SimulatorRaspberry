@@ -1,25 +1,21 @@
 import asyncio
 from bleak import BleakScanner, BleakClient
-import struct
 
 class BluetoothCallback:
     def __init__(self):
         self.received_data = 0  # Initialize with None or any default value
 
     async def notify_callback(self, sender, data):
-        # Assuming data is received from the Bluetooth device
-        if struct.pack("@h", 1) == struct.pack("<h", 1):
-            data = data[::-1]  # Reverse the byte order if little-endian
-
-        result = struct.unpack_from(">h", data, 2)[0]
-        output = result * 0.01
-        normalized_output = normalize(output, 0.0, 3.5)
-
-        if output < 0:
-            output = abs(output)
-        print(normalized_output)
-
-        self.received_data = normalized_output
+        data = bytearray(data)
+        steering = 0.0
+        
+        if data[3] == 65:
+            steering = 1.0
+        elif data[3] == 193:
+            steering = -1.0
+        
+        self.received_data = steering
+        print(steering)
 
 
 device_name = "RIZER"
@@ -34,66 +30,6 @@ CHARACTERISTIC = ""
 value_to_write = ""
 old_value = ""
 
-run_read_loop = True
-is_first_entry = True
-
-def normalize(value, min_val, max_val):
-    range_val = max_val - min_val
-    normalized_value = (value - min_val) / range_val
-    return normalized_value
-
-
-async def on_notification(sender, data):
-    # collection = db["sensor_values"]  # Sammlungsname // outsourcen zur api
-    # data = data[0]
-    # value = data.decode('utf-8')
-
-    # Daten in die MongoDB schreiben
-    # entry = {"value": value}
-    # integer_value = int.from_bytes(data, byteorder='big') 
-    #collection.insert_one(entry)
-    # print(f"Data written to MongoDB: {entry}")
-    # print(f"Data written to MongoDB: {data}")
-    if struct.pack("@h", 1) == struct.pack("<h", 1):
-        data = data[::-1]  # Reverse the byte order if little-endian
-
-    result = struct.unpack_from(">h", data, 2)[0]
-    output = result * 0.01
-    normalized_output = normalize(output, 0.0, 3.5)
-
-    if output < 0:
-        output = abs(output)
-    print(normalized_output)
-
-    """
-    if (value[6] != value_to_write):
-        value_to_write = value[6]
-        if(entry_id == None):
-            write_in_db(value_to_write)
-            entry_id = await get_id()
-            #print("Entry ID: "+entry_id)
-            #message = value_to_write
-            print("Test", value_to_write)
-            # is_first_entry = False
-        else:
-            #message = value_to_write
-            print(value_to_write)
-            # await update_in_db(entry_id, value_to_write)
-            write_in_db(value_to_write)
-            logger.info("Updateing for id: %r ....With Value %r", entry_id, value_to_write)
-            #print("Updateing for id: ", entry_id, "....With Value ", value_to_write)
-            # print("old value: ", old_value)
-    
-        
-    old_value = value_to_write
-    logger.info(
-        "  [Characteristic] %s (%s), Value: %r",
-        characteristic,
-        ",".join(characteristic.properties) ,
-        # value[0],
-    )
-    """
-
 async def scan_and_connect():
     global device_name
 
@@ -105,9 +41,6 @@ async def scan_and_connect():
 
     global value_to_write
     global old_value
-
-    global is_first_entry
-    global run_read_loop  
 
     stop_event = asyncio.Event()  
 
@@ -148,16 +81,12 @@ async def scan_and_connect():
 
                                 while True:
                                     try:
-                                        # value = await client.read_gatt_char(characteristic.uuid)
-                                        # print("Die CHARARARA iSt: ", CHARACTERISTIC, CHARACTERISTIC.properties)
-                                        # await client.start_notify(characteristic.uuid, on_notification)
                                         await client.start_notify(characteristic.uuid, bluetooth_callback.notify_callback)
                                         await asyncio.sleep(10) # keeps the connection open for 10 seconds
                                         await client.stop_notify(characteristic.uuid)                                     
                                         
                                     except Exception as e:
-                                        print("Error: ", e)
-                                        # run_read_loop = False                        
+                                        print("Error: ", e)                    
                                    
                                      
 asyncio.run(scan_and_connect())
