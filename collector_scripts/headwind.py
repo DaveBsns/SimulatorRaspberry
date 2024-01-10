@@ -70,12 +70,15 @@ async def scan_and_connect():
                                 except Exception as e:
                                     print("Error: ", e)
 
-                                speed_input = input("Enter a value between 2-100 to set the fan speed. Enter 1 to turn on the fan. Enter 0 to turn off the fan (or 'x' to exit): ")
-                                speed_value = int(speed_input)
+                                # speed_input = input("Enter a value between 2-100 to set the fan speed. Enter 1 to turn on the fan. Enter 0 to turn off the fan (or 'x' to exit): ")
+                                # speed_value = int(speed_input)
+                                speed_value = 1
+                                '''
                                 if speed_input.lower() == 'x':
                                     await client.stop_notify(CHARACTERISTIC) # characteristic.uuid
                                     await asyncio.sleep(1)
                                     break
+                                '''
                                 try:
                                     if 2 <= speed_value <= 100:
                                         await client.write_gatt_char(CHARACTERISTIC, bytearray([0x02, speed_value]))

@@ -1,5 +1,6 @@
 import asyncio
 from bleak import BleakScanner, BleakClient
+import socket
 
 device_name = "RIZER"
 DEVICEID = ""
@@ -13,7 +14,10 @@ CHARACTERISTIC_STEERING = ""
 
 class BluetoothCallback:
     def __init__(self):
-        self.received_data = 0  # Initialize with None or any default value
+        self.received_steering_data = 0  # Initialize with None or any default value
+        self.udp_ip = "127.0.0.1"
+        self.udp_port = 2222
+        
 
     async def notify_steering_callback(self, sender, data):
         data = bytearray(data)
@@ -24,15 +28,25 @@ class BluetoothCallback:
         elif data[3] == 193:
             steering = -1.0
         
-        self.received_data = steering
-        print(steering)
+        self.received_steering_data = steering
+        # print(self.received_steering_data)
+
+        self.send_steering_data_udp(self.received_steering_data)
+
+
+    def send_steering_data_udp(self, steering_data):
+        # Create a UDP socket
+        print(steering_data)
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
+            # Send speed_data
+            udp_socket.sendto(str(steering_data).encode(), (self.udp_ip, self.udp_port))
 
 async def read_steering(client, characteristic):
     bluetooth_callback = BluetoothCallback()
     try:
         await client.start_notify(characteristic, bluetooth_callback.notify_steering_callback)
-        # await asyncio.sleep(10) # keeps the connection open for 10 seconds
-        # await client.stop_notify(characteristic.uuid) 
+        await asyncio.sleep(10) # keeps the connection open for 10 seconds
+        await client.stop_notify(characteristic.uuid) 
         # print("Test steering")                                    
     except Exception as e:
         print("Error: ", e)                                    

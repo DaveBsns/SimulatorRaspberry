@@ -2,6 +2,7 @@ import asyncio
 from bleak import BleakScanner, BleakClient
 import struct
 import sys
+import socket
 
 
 device_name = "DIRETO XR"  # Replace with the name of your desired BLE device
@@ -21,10 +22,14 @@ CHARACTERISTIC_SPEED = ""
 class BluetoothCallback:
     def __init__(self):
         self.received_speed_data = 0  # Initialize with None or any default value
+        self.udp_ip = "127.0.0.1"  
+        self.udp_port = 1111
 
     async def notify_resistance_callback(self, sender, data):
         # Assuming data is received from the Bluetooth device
-        print(data)
+        # print(data)
+        test = "123"
+        
     
     async def notify_speed_callback(self, sender, data):
         # Assuming data is received from the Bluetooth device
@@ -37,9 +42,18 @@ class BluetoothCallback:
 
         if output < 0:
             output = abs(output)
+        
         print(normalized_output)
-
         self.received_speed_data = normalized_output
+        self.send_speed_data_udp(self.received_speed_data)
+
+    
+    def send_speed_data_udp(self, speed_data):
+        # Create a UDP socket
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
+            # Send speed_data
+            udp_socket.sendto(str(speed_data).encode(), (self.udp_ip, self.udp_port))
+    
 
 def normalize_speed_value(value, min_val, max_val):
     range_val = max_val - min_val
@@ -53,7 +67,8 @@ async def write_resistance(client, characteristic):
         await client.start_notify(characteristic, bluetooth_callback.notify_resistance_callback) # characteristic.uuid  
     except Exception as e:
         print("Error: ", e) 
-    resistance_input = input("Enter a value between 1-100 to set the resistance level. (or 'x' to exit): ")
+    # resistance_input = input("Enter a value between 1-100 to set the resistance level. (or 'x' to exit): ")
+    resistance_input = 10
     resistance_value = int(resistance_input)
     try:
         if 1 <= resistance_value <= 100:
@@ -70,9 +85,10 @@ async def write_resistance(client, characteristic):
 async def read_speed(client, characteristic):
     bluetooth_callback = BluetoothCallback()
     try:
+        # await asyncio.sleep(0.5)
         await client.start_notify(characteristic, bluetooth_callback.notify_speed_callback)
-        # await asyncio.sleep(0.25) # keeps the connection open for 10 seconds
-        # await client.stop_notify(characteristic) 
+        await asyncio.sleep(10) # keeps the connection open for 10 seconds
+        await client.stop_notify(characteristic.uuid) 
         # print("Test speed")                                    
 
     except Exception as e:

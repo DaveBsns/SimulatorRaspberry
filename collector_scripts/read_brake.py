@@ -2,7 +2,7 @@ import socket
 import json
 
 UDP_IP = "192.168.9.185"  # Listen to all incoming UDP packets
-UDP_PORT = 8888  # Same port as used in the ESP32 script
+UDP_PORT = 7777  # Same port as used in the Arduino script
 
 udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 udp_socket.bind((UDP_IP, UDP_PORT))
