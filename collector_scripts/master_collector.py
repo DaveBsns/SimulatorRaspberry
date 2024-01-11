@@ -114,11 +114,13 @@ if __name__ == "__main__":
                 #print(f"Received data on port {UDP_BRAKE}: {data.decode()} from {addr}")
                 brake_value = json.loads(data.decode())
                 brake_value = brake_value["sensor_value"]
+                print("Brake_value: ", brake_value)
                 data_sender.collect_brake(brake_value)
             elif sock is udp_bno_socket:
                 #print(f"Received data on port {UDP_BNO}: {data.decode()} from {addr}")
                 bno_value = json.loads(data.decode())
                 bno_value = bno_value["euler_r"]
+                print("BNO_Value: ", bno_value)
                 data_sender.collect_bno(bno_value)
             
 

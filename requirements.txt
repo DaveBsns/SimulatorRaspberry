@@ -2,5 +2,6 @@
 asyncio==3.4.3
 bleak==0.21.1 
 sockets==1.0.0
+git+https://github.com/almottier/TapoP100.git@main
 # logging
 # struct
