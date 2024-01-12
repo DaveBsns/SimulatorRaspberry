@@ -1,5 +1,6 @@
 import asyncio
 from bleak import BleakScanner, BleakClient
+from master_collector import DataReceiver
 
 class BluetoothCallback:
     def __init__(self):
@@ -63,6 +64,7 @@ async def scan_and_connect():
                         if(characteristic.uuid == characteristic_uuid):
                             CHARACTERISTIC = characteristic
 
+                            receiver = DataReceiver()
                             bluetooth_callback = BluetoothCallback()
                             while True:
                                 try:
@@ -79,6 +81,16 @@ async def scan_and_connect():
                                     await asyncio.sleep(1)
                                     break
                                 '''
+
+                                ''' Test
+                                receiver.start_udp_listener()
+                                try:
+                                    receiver.listen_for_udp_data()
+                                except KeyboardInterrupt:
+                                    receiver.stop_udp_listener()
+                                '''
+
+                                
                                 try:
                                     if 2 <= speed_value <= 100:
                                         await client.write_gatt_char(CHARACTERISTIC, bytearray([0x02, speed_value]))
