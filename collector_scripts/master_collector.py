@@ -9,7 +9,7 @@ class DataSender:
         self.brake_value = 0
         self.bno_value = 0
         self.roll_value = 0
-        self.udp_unity_send_ip = "127.0.0.2"
+        self.udp_unity_send_ip = "127.0.0.2" # IP of the computer running Unity
         self.udp_unity_send_port = 1337
         
     def collect_speed(self, speed):
@@ -96,8 +96,8 @@ if __name__ == "__main__":
 
     print("Master Collector script started...")
     # IP adresses to receive data from actuators and sensors
-    UDP_IP = "127.0.0.1"
-    UDP_ESP_IP = "192.168.9.185"   
+    UDP_IP = "127.0.0.1" # IP of the computer running this script
+    UDP_ESP_IP = "192.168.9.185" # External IP of the computer running this script to receive data from ESP32
 
     # ports to receive data from actuators and sensors
     UDP_DIRETO = 1111
