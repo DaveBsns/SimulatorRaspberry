@@ -97,7 +97,7 @@ if __name__ == "__main__":
     print("Master Collector script started...")
     # IP adresses to receive data from actuators and sensors
     UDP_IP = "127.0.0.1"
-    UDP_ESP_IP = "192.168.9.185"  
+    UDP_ESP_IP = "192.168.9.185"   
 
     # ports to receive data from actuators and sensors
     UDP_DIRETO = 1111
@@ -152,8 +152,9 @@ if __name__ == "__main__":
             elif sock is udp_roll_socket:
                 #print(f"Received data on port {UDP_BNO}: {data.decode()} from {addr}")
                 roll_value = json.loads(data.decode())
-                roll_value = roll_value["sensor_value"]
                 print("Roll_Value: ", roll_value)
+                roll_value = roll_value["sensor_value"]
+                
                 data_sender.collect_roll(roll_value)
             
 
