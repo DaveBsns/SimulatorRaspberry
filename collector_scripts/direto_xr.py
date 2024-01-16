@@ -120,8 +120,17 @@ async def scan_and_connect():
             
     # Stops the scanning event    
     async with BleakScanner(callback) as scanner:
+        # new 
+        try:
+            await stop_event.wait()
+        except KeyboardInterrupt:
+            print("Scanning stopped by user.")
+            scanner.stop()
+        # new end    
+        # old############
         await stop_event.wait()
-    
+        # old############
+
     if(DEVICEID != ""):
         # Connecting to BLE Device
         async with BleakClient(DEVICEID, timeout=60) as client:
