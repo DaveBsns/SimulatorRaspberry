@@ -1,11 +1,26 @@
 #!/bin/bash
 
-# List of Python scripts to start
-python_scripts=("read_speed.py")
+# Set the Python script to be executed 5 seconds before others
+pre_execution_script="tp110_connect.py"
 
-# Loop through the scripts and start them
+# Set the list of Python scripts to start
+python_scripts=("direto_xr.py" "elite_rizer.py" "headwind.py" "master_collector.py")
+# python_scripts=("master_collector.py")
+
+# Start the pre-execution script
+python "$pre_execution_script" &
+
+# Wait for the pre-execution script to complete
+while ps | grep -v grep | grep -q "python $pre_execution_script"; do
+    sleep 6
+done
+
+# Wait for an additional 5 seconds
+sleep 5
+
+# Loop through the other scripts and start them
 for script in "${python_scripts[@]}"; do
-    nohup python3 "$script" > "${script%.py}.log" 2>&1 &
+    python "$script" &
     echo "Started $script"
 done
 

@@ -154,7 +154,6 @@ if __name__ == "__main__":
                 roll_value = json.loads(data.decode())
                 print("Roll_Value: ", roll_value)
                 roll_value = roll_value["sensor_value"]
-                
                 data_sender.collect_roll(roll_value)
             
 
