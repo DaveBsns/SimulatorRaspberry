@@ -12,11 +12,11 @@ python "$pre_execution_script" &
 
 # Wait for the pre-execution script to complete
 while ps | grep -v grep | grep -q "python $pre_execution_script"; do
-    sleep 6
+    sleep 15
 done
 
 # Wait for an additional 5 seconds
-sleep 5
+sleep 10
 
 # Loop through the other scripts and start them
 for script in "${python_scripts[@]}"; do
