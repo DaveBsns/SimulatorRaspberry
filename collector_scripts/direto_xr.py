@@ -22,8 +22,9 @@ CHARACTERISTIC_SPEED = ""
 class BluetoothCallback:
     def __init__(self):
         self.received_speed_data = 0  # Initialize with None or any default value
-        # self.udp_ip = "127.0.0.1" # Just if the script is running on the same computer than the unity simulation
-        self.udp_ip = "192.168.9.185"
+        self.udp_ip = "127.0.0.1" # Just if the script is running on the same computer than the unity simulation
+        # self.udp_ip = "192.168.9.185" # Ip of the Bicycle Simulator Desktop PC
+        # self.udp_ip = "192.168.9.184" # IP of the Raspberry Pi
         self.udp_port = 1111
 
     async def notify_resistance_callback(self, sender, data):
@@ -44,7 +45,7 @@ class BluetoothCallback:
         if output < 0:
             output = abs(output)
         
-        # print(normalized_output)
+        print("Normalized Direto Speed: ", normalized_output)
         self.received_speed_data = normalized_output
         self.send_speed_data_udp(self.received_speed_data)
 

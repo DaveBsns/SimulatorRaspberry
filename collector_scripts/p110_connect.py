@@ -22,10 +22,10 @@ def connect_and_start_p100():
 				# p100.turnOn()	
 			except Exception:
 				pass
-		time.sleep(1)
+		time.sleep(5)
 		print("Turn P100 on...")
 		p100.turnOn()
-		time.sleep(5)	
+		time.sleep(10)	
 	except Exception:
 		pass
 	print("done")
