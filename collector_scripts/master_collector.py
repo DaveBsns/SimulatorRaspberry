@@ -54,9 +54,9 @@ class DataSender:
 class DataReceiver:
     def __init__(self):
         self.ble_fan = 0
-        self.udp_unity_receive_ip = "127.0.0.3"
-        self.udp_unity_receive_port = 12345
-        self.udp_socket = None
+        # self.udp_unity_receive_ip = "127.0.0.4"
+        # self.udp_unity_receive_port = 12345
+        self.udp_unity_receive_socket = None
     
     '''
     def get_fan_speed(self):
@@ -65,12 +65,34 @@ class DataReceiver:
 
     def start_udp_listener(self):
         # Create a UDP socket
-        self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        udp_unity_receive_ip = "127.0.0.1"
+        udp_unity_receive_port = 12345
+
+        self.udp_unity_receive_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         
         # Bind the socket to the specified IP and port
-        self.udp_socket.bind((self.udp_unity_receive_ip, self.udp_unity_receive_port))
+        self.udp_unity_receive_socket.bind((udp_unity_receive_ip, udp_unity_receive_port))
         
-        print(f"UDP listener started on {self.udp_unity_receive_ip}:{self.udp_unity_receive_port}")
+        # print(f"UDP listener started on {self.udp_unity_receive_ip}:{self.udp_unity_receive_port}")
+
+        while True:
+            # print("udp_direto_socket: ", self.udp_socket)
+            
+            try:
+                try:
+                    # Receive data from the socket
+                    data, addr = self.udp_unity_receive_socket.recvfrom(1024)
+                except Exception as e:
+                    print(f"Error while receiving UDP data: {e}")
+                    continue
+                
+                # Assuming data is an integer sent in binary format
+                self.ble_fan = int.from_bytes(data, byteorder='big')
+                
+                print(f"Received UDP data: {self.ble_fan}")
+            except Exception as e:
+                print(f"Error while receiving UDP data: {e}")
+            
     
     def stop_udp_listener(self):
         if self.udp_socket:
@@ -84,7 +106,7 @@ class DataReceiver:
                 data, addr = self.udp_socket.recvfrom(1024)
                 
                 # Assuming data is an integer sent in binary format
-                self.ble_fan = int.from_bytes(data, byteorder='big')
+                # self.ble_fan = int.from_bytes(data, byteorder='big')
                 
                 print(f"Received UDP data: {self.ble_fan}")
             except Exception as e:
@@ -92,8 +114,22 @@ class DataReceiver:
 
 
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
+data_receiver = DataReceiver()
 
+# udp_unity_receive_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+# udp_unity_receive_socket.bind((data_receiver.udp_unity_receive_ip, data_receiver.udp_unity_receive_port))
+
+try:
+    data_receiver.start_udp_listener()
+    data_receiver.listen_for_udp_data()
+except KeyboardInterrupt:
+    print("\nKeyboardInterrupt received. Stopping the loop.")
+finally:
+    pass
+    # udp_unity_receive_socket.close()
+
+'''
 # async def handle_data():
     data_sender = DataSender()
     # data_receiver = DataReceiver()
@@ -171,3 +207,4 @@ if __name__ == "__main__":
                 data_sender.collect_roll(roll_value)    
 
 # asyncio.run(handle_data())           
+'''
