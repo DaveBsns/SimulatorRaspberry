@@ -1,7 +1,8 @@
 import subprocess
+import time
 from p110_connect import connect_and_start_p100
 
-python_scripts = ["direto_xr.py", "elite_rizer.py", "headwind.py", "master_collector.py"]
+python_scripts = ["direto_xr.py", "elite_rizer.py", "master_collector.py", "headwind.py"] # , "headwind.py"
 print("starting scripts...")
 subprocesses = []
 
@@ -13,6 +14,7 @@ if p100:
         process = subprocess.Popen(["python", script])
         subprocesses.append(process)
         print(f"Started {script}")
+        time.sleep(15)
 
 try:
     # Keep the script running until interrupted by the user

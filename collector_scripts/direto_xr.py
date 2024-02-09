@@ -22,7 +22,7 @@ CHARACTERISTIC_SPEED = ""
 class BluetoothCallback:
     def __init__(self):
         self.received_speed_data = 0  # Initialize with None or any default value
-        self.udp_ip = "127.0.0.1" # Just if the script is running on the same computer than the unity simulation
+        self.udp_ip = "127.0.0.1" # Send the direto data to the master_collector.py script via UDP over localhost
         # self.udp_ip = "192.168.9.185" # Ip of the Bicycle Simulator Desktop PC
         # self.udp_ip = "192.168.9.184" # IP of the Raspberry Pi
         self.udp_port = 1111
@@ -40,7 +40,7 @@ class BluetoothCallback:
 
         result = struct.unpack_from(">h", data, 2)[0]
         output = result * 0.01
-        normalized_output = normalize_speed_value(output, 0.0, 3.5)
+        normalized_output = normalize_speed_value(output, 0.0, 2.5) # changed from 3.5 to 2.5 for a better scaling. change it back if the value range is too small
 
         if output < 0:
             output = abs(output)

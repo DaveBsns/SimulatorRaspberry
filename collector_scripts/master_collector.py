@@ -94,7 +94,6 @@ class DataReceiver:
 
 if __name__ == "__main__":
 
-# async def handle_data():
     data_sender = DataSender()
     # data_receiver = DataReceiver()
 
@@ -106,7 +105,8 @@ if __name__ == "__main__":
     # UDP_IP = "192.168.9.184" # IP of the computer running this script -> Raspberry Pi
     UDP_IP = "127.0.0.1" # IP to receive data from elite_rizer.py as well as from direto_xr.py scripts via UDP
     # UDP_IP_DIRETO = "127.0.0.2"
-    UDP_ESP_IP = "192.168.9.184"
+    # UDP_ESP_IP = "192.168.9.184" # Raspberry Pi 3
+    UDP_ESP_IP = "192.168.9.198" # Raspberry Pi 5
 
 
     # ports to receive data from actuators and sensors
@@ -144,7 +144,7 @@ if __name__ == "__main__":
             if sock is udp_rizer_socket:
                 #print(f"Received data on port {UDP_RIZER}: {data.decode()} from {addr}")
                 steering_value = data.decode()
-                print("steering: ", steering_value)
+                # print("steering: ", steering_value)
                 data_sender.collect_steering(steering_value)
             elif sock is udp_direto_socket:
                 #print(f"Received data on port {UDP_DIRETO}: {data.decode()} from {addr}")
@@ -168,6 +168,4 @@ if __name__ == "__main__":
                 roll_value = json.loads(data.decode())
                 # print("Roll_Value: ", roll_value)
                 roll_value = roll_value["sensor_value"]
-                data_sender.collect_roll(roll_value)    
-
-# asyncio.run(handle_data())           
+                data_sender.collect_roll(roll_value)         
