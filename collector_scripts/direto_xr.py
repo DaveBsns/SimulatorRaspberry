@@ -1,5 +1,5 @@
 import asyncio
-from bleak import BleakScanner, BleakClient
+from bleak import BleakScanner, BleakClient, exc
 import struct
 import sys
 import socket
@@ -22,7 +22,9 @@ CHARACTERISTIC_SPEED = ""
 class BluetoothCallback:
     def __init__(self):
         self.received_speed_data = 0  # Initialize with None or any default value
-        self.udp_ip = "127.0.0.1"  
+        self.udp_ip = "127.0.0.1" # Send the direto data to the master_collector.py script via UDP over localhost
+        # self.udp_ip = "192.168.9.185" # Ip of the Bicycle Simulator Desktop PC
+        # self.udp_ip = "192.168.9.184" # IP of the Raspberry Pi
         self.udp_port = 1111
 
     async def notify_resistance_callback(self, sender, data):
@@ -38,12 +40,12 @@ class BluetoothCallback:
 
         result = struct.unpack_from(">h", data, 2)[0]
         output = result * 0.01
-        normalized_output = normalize_speed_value(output, 0.0, 3.5)
+        normalized_output = normalize_speed_value(output, 0.0, 2.5) # changed from 3.5 to 2.5 for a better scaling. change it back if the value range is too small
 
         if output < 0:
             output = abs(output)
         
-        print(normalized_output)
+        print("Normalized Direto Speed: ", normalized_output)
         self.received_speed_data = normalized_output
         self.send_speed_data_udp(self.received_speed_data)
 
@@ -96,7 +98,7 @@ async def read_speed(client, characteristic):
     
 
 
-async def scan_and_connect():
+async def scan_and_connect_direto():
     global device_name
 
     global service_uuid
@@ -113,7 +115,8 @@ async def scan_and_connect():
     # Scanning and printing for BLE devices
     def callback(device, advertising_data):
         global DEVICEID   
-        print(device)
+        # print(device)
+        # print("Test direto")
         if(device.name == device_name):
             DEVICEID = device
             stop_event.set()
@@ -121,38 +124,48 @@ async def scan_and_connect():
     # Stops the scanning event    
     async with BleakScanner(callback) as scanner:
         # new 
+        '''
         try:
             await stop_event.wait()
         except KeyboardInterrupt:
             print("Scanning stopped by user.")
             scanner.stop()
-        # new end    
-        # old############
+        # new end
+        '''    
         await stop_event.wait()
-        # old############
 
     if(DEVICEID != ""):
-        # Connecting to BLE Device
-        async with BleakClient(DEVICEID, timeout=60) as client:
-            print("Device ID ", DEVICEID)
-            for service in client.services:
-                 
-                if (service.uuid == service_uuid):
-                        SERVICE = service
-     
-                if (SERVICE != ""):
-                    for characteristic in SERVICE.characteristics:
-                        if("write" in characteristic.properties and characteristic.uuid == characteristic_resistance_uuid):
-                            CHARACTERISTIC_RESISTANCE = characteristic
-                            print("Characteristic resistance: ",CHARACTERISTIC_RESISTANCE)
+        client_is_connected = False
+        while(client_is_connected == False):
 
-                        if("notify" in characteristic.properties and characteristic.uuid == characteristic_speed_uuid):
-                            CHARACTERISTIC_SPEED = characteristic
-                            print("Characteristic speed: ",CHARACTERISTIC_SPEED)
+            try:
+                async with BleakClient(DEVICEID, timeout=90) as client:
+                    client_is_connected = True
+                    print("Client connected to ", DEVICEID.name)
+                    # print("Device ID ", DEVICEID)
+                    for service in client.services:
+                        
+                        if (service.uuid == service_uuid):
+                                SERVICE = service
+            
+                        if (SERVICE != ""):
+                            for characteristic in SERVICE.characteristics:
+                                if("write" in characteristic.properties and characteristic.uuid == characteristic_resistance_uuid):
+                                    CHARACTERISTIC_RESISTANCE = characteristic
+                                    # print("Characteristic resistance: ",CHARACTERISTIC_RESISTANCE)
 
-                    while True:
-                        await write_resistance(client, CHARACTERISTIC_RESISTANCE)
-                        await read_speed(client, CHARACTERISTIC_SPEED)
+                                if("notify" in characteristic.properties and characteristic.uuid == characteristic_speed_uuid):
+                                    CHARACTERISTIC_SPEED = characteristic
+                                    # print("Characteristic speed: ",CHARACTERISTIC_SPEED)
+
+                            while True:
+                                await write_resistance(client, CHARACTERISTIC_RESISTANCE)
+                                await read_speed(client, CHARACTERISTIC_SPEED)
+            except exc.BleakError as e:
+                print(f"Failed to connect/discover services of {DEVICEID.name}: {e}")
+                # Add additional error handling or logging as needed
+                # raise  
+
 
                             
-asyncio.run(scan_and_connect())
+asyncio.run(scan_and_connect_direto())
