@@ -68,7 +68,7 @@ async def write_resistance(client, characteristic):
     except Exception as e:
         print("Error: ", e) 
     # resistance_input = input("Enter a value between 1-100 to set the resistance level. (or 'x' to exit): ")
-    resistance_input = 10
+    resistance_input = 60
     resistance_value = int(resistance_input)
     try:
         if 1 <= resistance_value <= 100:
