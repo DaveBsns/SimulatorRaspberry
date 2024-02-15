@@ -142,8 +142,8 @@ if __name__ == "__main__":
     # UDP_IP = "192.168.9.184" # IP of the computer running this script -> Raspberry Pi
     UDP_IP = "127.0.0.1" # IP to receive data from elite_rizer.py as well as from direto_xr.py scripts via UDP
     # UDP_IP_DIRETO = "127.0.0.2"
-    UDP_ESP_IP = "192.168.9.184" # Raspberry Pi 3
-    # UDP_ESP_IP = "192.168.9.198" # Raspberry Pi 5
+    # UDP_ESP_IP = "192.168.9.184" # Raspberry Pi 3
+    UDP_ESP_IP = "192.168.9.198" # Raspberry Pi 5
 
 
     # ports to receive data from actuators and sensors
