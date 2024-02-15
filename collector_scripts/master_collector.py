@@ -53,15 +53,15 @@ class DataSender:
 # This class might be to be located in the headwind script
 class DataReceiver:
     def __init__(self):
-        self.ble_fan = 0
+        self.ble_fan = 1
         # self.udp_unity_receive_ip = "127.0.0.4"
         # self.udp_unity_receive_port = 12345
         self.udp_unity_receive_socket = None
     
-    '''
+    
     def get_fan_speed(self):
         return self.ble_fan
-    '''
+    
 
     def start_udp_listener(self):
         # Create a UDP socket

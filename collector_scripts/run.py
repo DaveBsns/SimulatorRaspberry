@@ -2,7 +2,7 @@ import subprocess
 import time
 from p110_connect import connect_and_start_p100
 
-python_scripts = ["direto_xr.py", "elite_rizer.py", "master_collector.py", "headwind.py"] # , "headwind.py"
+python_scripts = ["direto_xr.py", "elite_rizer.py", "master_collector.py"] # , "headwind.py"
 print("starting scripts...")
 subprocesses = []
 
