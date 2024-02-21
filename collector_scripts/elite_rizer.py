@@ -31,7 +31,7 @@ class BluetoothCallback:
             steering = -1.0
         
         self.received_steering_data = steering
-        # print(self.received_steering_data)
+        print(self.received_steering_data)
 
         self.send_steering_data_udp(self.received_steering_data)
 
@@ -97,7 +97,7 @@ async def scan_and_connect_rizer():
                     # return True
                     # logger.info("Device ID ", device_id)
                     for service in client.services:
-                        # print("service: ", service.properties)
+                        # print("service: ", service)
                         
                         if (service.uuid == service_uuid):
                                 SERVICE = service
@@ -109,7 +109,7 @@ async def scan_and_connect_rizer():
                                 
                                 if("notify" in characteristic.properties and characteristic.uuid == characteristic_steering_uuid):
                                     CHARACTERISTIC_STEERING = characteristic
-                                    #print("CHARACTERISTIC: ", CHARACTERISTIC_STEERING, characteristic.properties)
+                                    # print("CHARACTERISTIC: ", CHARACTERISTIC_STEERING, characteristic.properties)
                                 
                                 
                             while True:

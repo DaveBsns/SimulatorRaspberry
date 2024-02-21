@@ -31,5 +31,5 @@ def connect_and_start_p100():
 	print("done")
 	return True
 
-# connect_and_start_p100()
+connect_and_start_p100()  # uncomment this if the bicycle simulator getting started by a batch or a shell script and comment it if the bicycle simulator is getting started by run.py python script
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Set the Python script to be executed 5 seconds before others
-pre_execution_script="tp110_connect.py"
+pre_execution_script="p110_connect.py"
 
 # Set the list of Python scripts to start
 python_scripts=("direto_xr.py" "elite_rizer.py" "headwind.py" "master_collector.py")

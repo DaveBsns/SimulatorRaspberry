@@ -4,14 +4,14 @@ REM Set the Python script to be executed 5 seconds before others
 set pre_execution_script="p110_connect.py"
 
 REM Set the list of Python scripts to start
-set python_scripts=("direto_xr.py", "elite_rizer.py", "headwind.py", "master_collector.py")
-REM set python_scripts=("master_collector.py")
+set python_scripts=("direto_xr.py", "elite_rizer.py", "headwind.py", "master_collector.py") 
 
 REM Start the pre-execution script
 start "" python %pre_execution_script%
 
 REM Wait for the pre-execution script to complete
 :wait_for_pre_execution
+echo Pre execution script started
 ping 127.0.0.1 -n 6 > nul
 tasklist | find "python.exe" | findstr "%pre_execution_script%" > nul
 if errorlevel 1 goto pre_execution_completed
