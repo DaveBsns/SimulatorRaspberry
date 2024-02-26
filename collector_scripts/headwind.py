@@ -105,8 +105,6 @@ async def scan_and_connect_headwind():
                                         except KeyboardInterrupt:
                                             receiver.stop_udp_listener()
                                         '''
-
-                                        
                                         try:
                                             if 2 <= speed_value <= 100:
                                                 await client.write_gatt_char(CHARACTERISTIC, bytearray([0x02, speed_value]))
