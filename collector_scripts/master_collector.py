@@ -40,7 +40,7 @@ class DataSender:
             "espBrake": float(brake_data),
             "espRoll": float(roll_data)
         }
-        # print(data)
+        print(data)
         # Convert dictionary to JSON string
         json_data = json.dumps(data)
 
