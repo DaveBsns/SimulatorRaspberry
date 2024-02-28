@@ -80,23 +80,19 @@ async def scan_and_connect_headwind():
 
                                     receiver = DataReceiver()
                                     bluetooth_callback = BluetoothCallback()
+                                    receiver.open_udp_socket()
                                     while True:
+                                        
+                                        try:
+                                            receiver.start_udp_listener()
+                                            # print("FAN SPEED: ", receiver.get_fan_speed())
+                                            speed_value = receiver.get_fan_speed()
+                                        except Exception as e:
+                                            print("Error: ", e)
                                         try:
                                             await client.start_notify(CHARACTERISTIC, bluetooth_callback.notify_callback) # characteristic.uuid  
                                         except Exception as e:
                                             print("Error: ", e)
-
-                                        # speed_input = input("Enter a value between 2-100 to set the fan speed. Enter 1 to turn on the fan. Enter 0 to turn off the fan (or 'x' to exit): ")
-                                        # speed_value = int(speed_input)
-                                        # speed_value = 1
-                                        print("FAN SPEED: ", receiver.get_fan_speed())
-                                        speed_value = receiver.get_fan_speed()
-                                        '''
-                                        if speed_input.lower() == 'x':
-                                            await client.stop_notify(CHARACTERISTIC) # characteristic.uuid
-                                            await asyncio.sleep(1)
-                                            break
-                                        '''
 
                                         ''' Test
                                         receiver.start_udp_listener()

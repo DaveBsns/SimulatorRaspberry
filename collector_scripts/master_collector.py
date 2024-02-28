@@ -56,51 +56,45 @@ class DataReceiver:
         self.udp_unity_receive_ip = "127.0.0.1"
         self.udp_unity_receive_port = 12345
         self.udp_unity_receive_socket = None
+        self.ble_fan_speed = 0
     
     
     def get_fan_speed(self):
-        return self.ble_fan
+        print("Self ble fan speed: ", self.ble_fan_speed)
+        return self.ble_fan_speed
     
-
-    def start_udp_listener(self):
+    def open_udp_socket(self):
         # Create a UDP socket
-        # udp_unity_receive_ip = "127.0.0.1"
-        # udp_unity_receive_port = 12345
+        udp_unity_receive_ip = "127.0.0.1"
+        udp_unity_receive_port = 12345
 
         self.udp_unity_receive_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.udp_unity_receive_socket.bind((self.udp_unity_receive_ip, self.udp_unity_receive_port))
+        self.udp_unity_receive_socket.bind((udp_unity_receive_ip, udp_unity_receive_port))
 
         print("Listening for UDP data...")
 
+    def start_udp_listener(self):
         # Infinite loop to continuously receive data
-        while True:
-            try:
-                try:
-                    data, addr = self.udp_unity_receive_socket.recvfrom(1024)  # Buffer size is 1024 bytes
-                    
-                except Exception as e:
-                    print(f"Error while receiving UDP data: {e}")
-                    continue
+        try:
+            data, addr = self.udp_unity_receive_socket.recvfrom(1024)  # Buffer size is 1024 bytes  
 
-                # Assuming data is an integer sent in binary format
-                # self.ble_fan = int.from_bytes(data, byteorder='big')
-                print("Received data:", data)
-                # print(f"Received UDP data: {self.ble_fan}")
-            except Exception as e:
-                print(f"Error while receiving UDP data: {e}")        
-    
+            json_data = data.decode('utf-8')  # Decode bytes to string
+            # value = json.loads(data.decode())
+            unity_values = json.loads(json_data)
+            ble_fan_value = unity_values["bleFan"]
+            # print("ble fan from unity: ", ble_fan_value)
+            self.ble_fan_speed = ble_fan_value
+        except Exception as e:
+            print(f"Error while receiving UDP data: {e}")
+
     def stop_udp_listener(self):
-        if self.udp_socket:
-            self.udp_socket.close()
+        if self.udp_unity_receive_socket:
+            self.udp_unity_receive_socket.close()
             print("UDP listener stopped.")
 
 
 
 if __name__ == "__main__":
-    # data_receiver = DataReceiver()
-
-    # udp_unity_receive_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    # udp_unity_receive_socket.bind((data_receiver.udp_unity_receive_ip, data_receiver.udp_unity_receive_port))
     '''
     try:
         data_receiver.start_udp_listener()
@@ -110,15 +104,12 @@ if __name__ == "__main__":
         pass
         # udp_unity_receive_socket.close()
     '''
-
-
     data_sender = DataSender()
-    # data_receiver = DataReceiver()
 
     print("Master Collector script started...")
     # IP adresses to receive data from actuators and sensors
     UDP_IP = "127.0.0.1" # IP to receive data from elite_rizer.py as well as from direto_xr.py scripts via UDP
-    UDP_IP_UNITY_RECEIVE = "127.0.0.1" # Receives Data from unity such as the ble fan data
+    # UDP_IP_UNITY_RECEIVE = "127.0.0.1" # Receives Data from unity such as the ble fan data
     UDP_ESP_IP = "192.168.9.185" # External IP of the computer running this script to receive data from ESP32 -> Bicycle Simulator Desktop PC
     # UDP_ESP_IP = "192.168.9.184" # Raspberry Pi 3
     # UDP_ESP_IP = "192.168.9.198" # Raspberry Pi 5
@@ -129,7 +120,7 @@ if __name__ == "__main__":
     UDP_PORT_ROLL = 6666
     UDP_PORT_BRAKE = 7777
     UDP_PORT_BNO = 8888
-    UDP_PORT_UNITY_RECEIVE = 12345 # Port to receive data from unity such as the ble fan data
+    # UDP_PORT_UNITY_RECEIVE = 12345 # Port to receive data from unity such as the ble fan data
 
 
     udp_rizer_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -147,15 +138,15 @@ if __name__ == "__main__":
     udp_roll_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     udp_roll_socket.bind((UDP_ESP_IP, UDP_PORT_ROLL))
 
-    udp_unity_receive_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    udp_unity_receive_socket.bind((UDP_IP_UNITY_RECEIVE, UDP_PORT_UNITY_RECEIVE))
+    # udp_unity_receive_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    # udp_unity_receive_socket.bind((UDP_IP_UNITY_RECEIVE, UDP_PORT_UNITY_RECEIVE))
 
     
     
     while True:
         # print("udp_direto_socket: ", udp_direto_socket)
         data_sender.send_unity_data_udp(data_sender.speed_value, data_sender.steering_value, data_sender.brake_value, data_sender.bno_value, data_sender.roll_value)
-        readable, _, _ = select.select([udp_rizer_socket, udp_direto_socket, udp_brake_socket, udp_bno_socket, udp_roll_socket, udp_unity_receive_socket], [], [])
+        readable, _, _ = select.select([udp_rizer_socket, udp_direto_socket, udp_brake_socket, udp_bno_socket, udp_roll_socket], [], [])
         
         for sock in readable:
             data, addr = sock.recvfrom(1024)
@@ -182,10 +173,12 @@ if __name__ == "__main__":
                 # print("Roll_Value: ", roll_value)
                 roll_value = roll_value["sensor_value"]
                 data_sender.collect_roll(roll_value)
+            '''
             elif sock is udp_unity_receive_socket:
                 json_data = data.decode('utf-8')  # Decode bytes to string
                 # value = json.loads(data.decode())
                 unity_values = json.loads(json_data)
                 ble_fan_value = unity_values["bleFan"]
                 print("ble fan from unity: ", ble_fan_value)
+            '''
                         
