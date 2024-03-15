@@ -16,7 +16,7 @@ class BluetoothCallback:
     def __init__(self):
         self.received_steering_data = 0  # Initialize with None or any default value
         self.udp_ip = "127.0.0.1" # Send the rizer data to the master_collector.py script via UDP over localhost
-        # self.udp_ip = "192.168.9.185" # Ip of the Bicycle Simulator Desktop PC
+        # self.udp_ip = "10.30.77.221" # Ip of the Bicycle Simulator Desktop PC
         # self.udp_ip = "192.168.9.184" # IP of the Raspberry Pi
         self.udp_port = 2222
         

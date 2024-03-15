@@ -11,7 +11,7 @@ class DataSender:
         self.bno_value = 0
         self.roll_value = 0
         self.udp_unity_send_ip = "127.0.0.2" # IP of the computer running Unity (just the localhost ip if the script is running on the same computer than the simulation)
-        # self.udp_unity_send_ip = "192.168.9.185" # IP of the computer running Unity
+        # self.udp_unity_send_ip = "10.30.77.221" # IP of the computer running Unity
         self.udp_unity_send_port = 1337
         
     def collect_speed(self, speed):
@@ -110,7 +110,7 @@ if __name__ == "__main__":
     # IP adresses to receive data from actuators and sensors
     UDP_IP = "127.0.0.1" # IP to receive data from elite_rizer.py as well as from direto_xr.py scripts via UDP
     # UDP_IP_UNITY_RECEIVE = "127.0.0.1" # Receives Data from unity such as the ble fan data
-    UDP_ESP_IP = "192.168.9.185" # External IP of the computer running this script to receive data from ESP32 -> Bicycle Simulator Desktop PC
+    UDP_ESP_IP = "10.30.77.221" # External IP of the computer running this script to receive data from ESP32 -> Bicycle Simulator Desktop PC
     # UDP_ESP_IP = "192.168.9.184" # Raspberry Pi 3
     # UDP_ESP_IP = "192.168.9.198" # Raspberry Pi 5
 
