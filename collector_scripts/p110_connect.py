@@ -3,7 +3,7 @@ import time
 
 
 def connect_and_start_p100():
-	p100 = PyP100.P100("10.30.77.191", "unitylab.hhn3@gmail.com", "Unitylab") #Creates a P100 plug object
+	p100 = PyP100.P100("192.168.0.110", "unitylab.hhn3@gmail.com", "Unitylab") #Creates a P100 plug object
 	# p100.handshake() #Creates the cookies required for further methods
 	# p100.login()
 	print("Restarting P100 Power Outlet")

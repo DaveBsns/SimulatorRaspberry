@@ -110,7 +110,7 @@ if __name__ == "__main__":
     # IP adresses to receive data from actuators and sensors
     UDP_IP = "127.0.0.1" # IP to receive data from elite_rizer.py as well as from direto_xr.py scripts via UDP
     # UDP_IP_UNITY_RECEIVE = "127.0.0.1" # Receives Data from unity such as the ble fan data
-    UDP_ESP_IP = "10.30.77.40" # External IP of the computer running this script to receive data from ESP32 -> Bicycle Simulator Desktop PC
+    UDP_ESP_IP = "192.168.0.101" # IP of the computer running this script to receive data from ESP32 -> Bicycle Simulator Desktop PC
     # UDP_ESP_IP = "192.168.9.184" # Raspberry Pi 3
     # UDP_ESP_IP = "192.168.9.198" # Raspberry Pi 5
 
@@ -165,8 +165,8 @@ if __name__ == "__main__":
                 data_sender.collect_brake(brake_value)
             elif sock is udp_bno_socket:
                 bno_value = json.loads(data.decode())
-                bno_value = bno_value["euler_r"]
                 # print("BNO_Value: ", bno_value)
+                bno_value = bno_value["euler_r"]
                 data_sender.collect_bno(bno_value)
             elif sock is udp_roll_socket:
                 roll_value = json.loads(data.decode())
