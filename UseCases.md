@@ -2,15 +2,25 @@
 
 ## Use Case Overview
 R1 - Removing Barries and building security
+
 R2 - Expansion of driving practice (mainly on intersections)
+
 R3 - Expansion of driving practice (mainly overtaking and narrow spots)
+
 R4 - Expansion of driving practice at different times of the day
+
 R5 - Weather influences when cycling
+
 A1 - Building confidence on the bicycle path next to the road
+
 A2 - Building confidence when driving on the road
+
 A3.1 - Feeling safe when being overtaken by cars
+
 A3.2 - Measuring stress when being overtaken by cars
+
 A4 - Cycling at night and sharing the road with other cars
+
 A5 - Cycling under varying weather conditions at varying times of day and at night
 
 The individual cyclist actions are taken from the requirements document and named in alphabetical order.
