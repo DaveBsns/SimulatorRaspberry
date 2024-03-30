@@ -8,7 +8,7 @@ Scenario 1: Easy ride in the city
 * Cars keep their distance
 * Cars don’t drive too fast
 * Intersection with a red light that the cyclist crosses straight 
-* Right turn without a traffic light and Stop sign
+* Right turn with a Stop sign, no traffic lights
 * During the day
 * Covers 17 Use Case Actions
 
