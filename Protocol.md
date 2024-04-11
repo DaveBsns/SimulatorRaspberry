@@ -14,3 +14,8 @@ Thursday, 28th March 2024:
 - Overview of Unity version control
 - Overview of sensor collection scripts
 - Discussion of the steering logic: can be improved, but this isn't required in this project
+
+Thursday, 4th April 2024: no meeting
+
+Thursday, 11th April 2024:
+- Preparation for intermediate presentation scheduled for April 18
