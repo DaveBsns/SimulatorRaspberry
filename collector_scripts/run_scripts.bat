@@ -4,7 +4,7 @@ REM Set the Python script to be executed 5 seconds before others
 set pre_execution_script="p110_connect.py"
 
 REM Set the list of Python scripts to start
-set python_scripts=("direto_xr.py", "connect_rizer.py", "headwind.py", "master_collector.py") 
+set python_scripts=("direto_xr.py", "elite_rizer.py", "headwind.py", "master_collector.py") 
 
 REM Start the pre-execution script
 start "" python %pre_execution_script%

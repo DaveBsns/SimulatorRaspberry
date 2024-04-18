@@ -7,22 +7,25 @@ DEVICE_NAME = "RIZER"
 DEVICE_UUID = "fc:12:65:28:cb:44"
 
 SERVICE_STEERING_UUID = "347b0001-7635-408b-8918-8ff3949ce592" # Rizer - read steering
-SERVICE_TILT_UUID = "347b00207635408b89188ff3949ce592"
+SERVICE_TILT_UUID = "347b0001-7635-408b-8918-8ff3949ce592"
+
+
+INCREASE_TILT_HEX = "060102"
+DECREASE_TILT_HEX = "060402"
 
 steering_service = ""
 tilt_service = ""
 
 stering_ready = 0
-
+tilt_ready = 0
 
 
 CHARACTERISTICS_STEEING_UUID = "347b0030-7635-408b-8918-8ff3949ce592" # Rizer - read steering
-CHARACTERISTIC_TILT_UUID = "347b00017635408b89188ff3949ce592" # write tilt
+CHARACTERISTIC_TILT_UUID = "347b0020-7635-408b-8918-8ff3949ce592" # write tilt
 
 
-characteristics_steering = ""
-characteristics_tilt = ""
-
+steering_characteristics = ""
+tilt_characteristics = ""
 
 
 class BluetoothCallback:
@@ -67,9 +70,14 @@ async def read_steering(client, characteristic):
         print("Error: ", e)                    
 
 async def write_tilt(client, characteristic):
-    BluetoothCallback = BluetoothCallback()                
-
-
+    bluetooth_callback = BluetoothCallback()
+    try:
+        #TODO Write bt stuff
+        print("BT stuff")
+        await client.write_gatt_char(CHARACTERISTIC_TILT_UUID, bytes.fromhex(INCREASE_TILT_HEX), response=True)
+    except Exception as e:
+        print("Error: ", e) 
+           
 
 async def scan_and_connect_rizer():
     global DEVICE_NAME
@@ -80,9 +88,11 @@ async def scan_and_connect_rizer():
     global tilt_service
 
     global CHARACTERISTICS_STEEING_UUID
-    global characteristics_steering
+    global steering_characteristics
+    global tilt_characteristics
 
     global stering_ready
+    global tilt_ready
     
     # Connecting to BLE Device
     client_is_connected = False
@@ -99,21 +109,41 @@ async def scan_and_connect_rizer():
                     # print("service: ", service)
                     
                     if (service.uuid == SERVICE_STEERING_UUID):
-                            steering_service = service
-                            # print("[service uuid] ", SERVICE.uuid)
+                        steering_service = service
+                        print("[service uuid] ", steering_service.uuid)
 
-                    if (steering_service != ""):
+                        if (steering_service != ""):
                             # print("SERVICE", SERVICE)
                             for characteristic in steering_service.characteristics:
                                 
                                 if("notify" in characteristic.properties and characteristic.uuid == CHARACTERISTICS_STEEING_UUID):
-                                    characteristics_steering = characteristic
+                                    steering_characteristics = characteristic
                                     # print("CHARACTERISTIC: ", CHARACTERISTIC_STEERING, characteristic.properties)
                                 print("IF")
-                            print("FOR")    
-                            while True:
-                                await read_steering(client, characteristics_steering) 
-                        
+
+                        print(stering_ready)
+                        stering_ready = 1 
+
+                    if (service.uuid == SERVICE_TILT_UUID):
+                        tilt_service = service
+                        print("[service uuid] ", tilt_service.uuid)
+
+                        if (tilt_service != ""):
+                            for characteristic in tilt_service.characteristics:
+
+                                print("characteristics UUID: ", characteristic.uuid)
+                                if("notify" in characteristic.properties and characteristic.uuid == CHARACTERISTIC_TILT_UUID):
+                                    tilt_characteristics = characteristic
+                        print(tilt_ready)
+                        tilt_ready = 1
+
+                while (stering_ready == 1 and tilt_ready == 1):
+                    print("all ready!")
+                    await read_steering(client, steering_characteristics)
+                    await write_tilt(client, tilt_characteristics)
+                    print(tilt_characteristics)
+                    print("read and write!")
+ 
 
         except exc.BleakError as e:
             print(f"Failed to connect/discover services of {DEVICE_UUID}: {e}")
@@ -121,7 +151,3 @@ async def scan_and_connect_rizer():
             # raise 
 
 asyncio.run(scan_and_connect_rizer())
-
-
-
-
