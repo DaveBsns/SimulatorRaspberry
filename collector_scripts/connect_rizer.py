@@ -99,21 +99,33 @@ async def scan_and_connect_rizer():
                     # print("service: ", service)
                     
                     if (service.uuid == SERVICE_STEERING_UUID):
-                            steering_service = service
-                            # print("[service uuid] ", SERVICE.uuid)
+                        steering_service = service
+                        # print("[service uuid] ", SERVICE.uuid)
 
                     if (steering_service != ""):
-                            # print("SERVICE", SERVICE)
-                            for characteristic in steering_service.characteristics:
-                                
-                                if("notify" in characteristic.properties and characteristic.uuid == CHARACTERISTICS_STEEING_UUID):
-                                    characteristics_steering = characteristic
-                                    # print("CHARACTERISTIC: ", CHARACTERISTIC_STEERING, characteristic.properties)
-                                
-                                
-                            while True:
-                                await read_steering(client, characteristics_steering)
-                        
+                        # print("SERVICE", SERVICE)
+                        for characteristic in steering_service.characteristics:
+                            
+                            if("notify" in characteristic.properties and characteristic.uuid == CHARACTERISTICS_STEEING_UUID):
+                                characteristics_steering = characteristic
+                                # print("CHARACTERISTIC: ", CHARACTERISTIC_STEERING, characteristic.properties)
+                            print("IF")
+
+                        print(stering_ready)
+                        stering_ready = 1 
+
+                    if (tilt_service != ""):
+                        for characteristic in tilt_service.characteristics:
+
+                            if("notify" in characteristic.properties and characteristic.uuid == CHARACTERISTIC_TILT_UUID):
+                                characteristics_tilt = characteristic
+
+
+                print(stering_ready)
+                print("IF2")    
+                while stering_ready == 1:
+                    await read_steering(client, characteristics_steering)
+ 
 
         except exc.BleakError as e:
             print(f"Failed to connect/discover services of {DEVICE_UUID}: {e}")

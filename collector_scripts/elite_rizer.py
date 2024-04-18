@@ -117,8 +117,8 @@ async def scan_and_connect_rizer():
                                 if("notify" in characteristic.properties and characteristic.uuid == CHARACTERISTICS_STEEING_UUID):
                                     characteristics_steering = characteristic
                                     # print("CHARACTERISTIC: ", CHARACTERISTIC_STEERING, characteristic.properties)
-                                
-                                
+                                print("IF")
+                            print("FOR")    
                             while True:
                                 await read_steering(client, characteristics_steering)      
             except exc.BleakError as e:
