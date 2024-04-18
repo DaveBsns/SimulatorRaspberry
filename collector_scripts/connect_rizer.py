@@ -7,7 +7,8 @@ DEVICE_NAME = "RIZER"
 DEVICE_UUID = "fc:12:65:28:cb:44"
 
 SERVICE_STEERING_UUID = "347b0001-7635-408b-8918-8ff3949ce592" # Rizer - read steering
-SERVICE_TILT_UUID = "347b0020-7635-408b-8918-8ff3949ce592"
+SERVICE_TILT_UUID = "347b0001-7635-408b-8918-8ff3949ce592"
+
 
 INCREASE_TILT_HEX = "060102"
 DECREASE_TILT_HEX = "060402"
@@ -19,14 +20,12 @@ stering_ready = 0
 tilt_ready = 0
 
 
-
 CHARACTERISTICS_STEEING_UUID = "347b0030-7635-408b-8918-8ff3949ce592" # Rizer - read steering
-CHARACTERISTIC_TILT_UUID = "347b00017635408b89188ff3949ce592" # write tilt
+CHARACTERISTIC_TILT_UUID = "347b0020-7635-408b-8918-8ff3949ce592" # write tilt
 
 
 steering_characteristics = ""
 tilt_characteristics = ""
-
 
 
 class BluetoothCallback:
@@ -90,6 +89,7 @@ async def scan_and_connect_rizer():
 
     global CHARACTERISTICS_STEEING_UUID
     global steering_characteristics
+    global tilt_characteristics
 
     global stering_ready
     global tilt_ready
@@ -133,18 +133,13 @@ async def scan_and_connect_rizer():
 
                                 if("notify" in characteristic.properties and characteristic.uuid == CHARACTERISTIC_TILT_UUID):
                                     tilt_characteristics = characteristic
-                        print(stering_ready)
+                        print(tilt_ready)
                         tilt_ready = 1
 
-                print("IF2")
-                print()
                 while (stering_ready == 1 and tilt_ready == 1):
-                    print("forever!")
-                    time.sleep(2)
-
-                while (stering_ready == 1 and tilt_ready == 1):
+                    print("all ready!")
                     await read_steering(client, steering_characteristics)
-                    #await write_tilt(client, characteristics_tilt)
+                    await write_tilt(client, tilt_characteristics)
                     print("read and write!")
                     await write_tilt(client, tilt_characteristics)
  

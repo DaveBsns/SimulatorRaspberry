@@ -1,20 +1,27 @@
 import asyncio
-from bleak import BleakScanner, BleakClient, exc
+from bleak import BleakClient, exc
 import socket
+import time
 
 DEVICE_NAME = "RIZER"       
 DEVICE_UUID = "fc:12:65:28:cb:44"
-DEVICE_ID = ""
 
-SERVICE_UUID = "347b0001-7635-408b-8918-8ff3949ce592" # Rizer - read steering
+SERVICE_STEERING_UUID = "347b0001-7635-408b-8918-8ff3949ce592" # Rizer - read steering
 SERVICE_TILT_UUID = "347b00207635408b89188ff3949ce592"
-SERVICE = ""
+
+steering_service = ""
+tilt_service = ""
+
+stering_ready = 0
+
+
 
 CHARACTERISTICS_STEEING_UUID = "347b0030-7635-408b-8918-8ff3949ce592" # Rizer - read steering
 CHARACTERISTIC_TILT_UUID = "347b00017635408b89188ff3949ce592" # write tilt
 
 
 characteristics_steering = ""
+characteristics_tilt = ""
 
 
 
@@ -57,62 +64,47 @@ async def read_steering(client, characteristic):
         await client.stop_notify(characteristic.uuid) 
         # print("Test steering")                                    
     except Exception as e:
-        print("Error: ", e)                                    
+        print("Error: ", e)                    
+
+async def write_tilt(client, characteristic):
+    BluetoothCallback = BluetoothCallback()                
 
 
 
 async def scan_and_connect_rizer():
     global DEVICE_NAME
 
-    global SERVICE_UUID
-    global SERVICE
+    global SERVICE_STEERING_UUID
+
+    global steering_service
+    global tilt_service
 
     global CHARACTERISTICS_STEEING_UUID
     global characteristics_steering
 
-    stop_event = asyncio.Event()  
-
-    # Scanning and printing for BLE devices
-    def callback(device, advertising_data):
-        global DEVICE_ID   
-        # print(device)
-        # print("Test rizer")
-        if(device.name == DEVICE_NAME):
-            
-            DEVICE_ID = device
-            stop_event.set()
-            
-    # Stops the scanning event    
-    async with BleakScanner(callback) as scanner:
-        '''
-        try:
-            await stop_event.wait()
-        except KeyboardInterrupt:
-            print("Scanning stopped by user.")
-            scanner.stop()
-        '''
-        await stop_event.wait()
+    global stering_ready
     
-    if(DEVICE_ID != ""):
-        # Connecting to BLE Device
-        client_is_connected = False
-        while(client_is_connected == False):
-            try:
-                async with BleakClient(DEVICE_ID, timeout=90) as client:
-                    client_is_connected = True
-                    print("Client connected to ", DEVICE_ID.name)
-                    # return True
-                    # logger.info("Device ID ", device_id)
-                    for service in client.services:
-                        # print("service: ", service)
-                        
-                        if (service.uuid == SERVICE_UUID):
-                                SERVICE = service
-                                # print("[service uuid] ", SERVICE.uuid)
-                                    
-                        if (SERVICE != ""):
+    # Connecting to BLE Device
+    client_is_connected = False
+    while(client_is_connected == False):
+        try:
+            async with BleakClient(DEVICE_UUID, timeout=90) as client:
+                client_is_connected = True
+                #print("Client connected to ", DEVICE_ID.name)
+                #print("Client connected to ", DEVICE_ID)
+                print("Client connected to ", DEVICE_UUID)
+                # return True
+                # logger.info("Device ID ", device_id)
+                for service in client.services:
+                    # print("service: ", service)
+                    
+                    if (service.uuid == SERVICE_STEERING_UUID):
+                            steering_service = service
+                            # print("[service uuid] ", SERVICE.uuid)
+
+                    if (steering_service != ""):
                             # print("SERVICE", SERVICE)
-                            for characteristic in SERVICE.characteristics:
+                            for characteristic in steering_service.characteristics:
                                 
                                 if("notify" in characteristic.properties and characteristic.uuid == CHARACTERISTICS_STEEING_UUID):
                                     characteristics_steering = characteristic
@@ -120,11 +112,13 @@ async def scan_and_connect_rizer():
                                 print("IF")
                             print("FOR")    
                             while True:
-                                await read_steering(client, characteristics_steering)      
-            except exc.BleakError as e:
-                print(f"Failed to connect/discover services of {DEVICE_ID.name}: {e}")
-                # Add additional error handling or logging as needed
-                # raise 
+                                await read_steering(client, characteristics_steering) 
+                        
+
+        except exc.BleakError as e:
+            print(f"Failed to connect/discover services of {DEVICE_UUID}: {e}")
+            # Add additional error handling or logging as needed
+            # raise 
 
 asyncio.run(scan_and_connect_rizer())
 
