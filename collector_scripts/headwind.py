@@ -87,6 +87,7 @@ async def scan_and_connect_headwind():
                                             receiver.start_udp_listener()
                                             # print("FAN SPEED: ", receiver.get_fan_speed())
                                             speed_value = receiver.get_fan_speed()
+                                            print("Fan Speed: ", speed_value)
                                         except Exception as e:
                                             print("Error: ", e)
                                         try:
@@ -94,12 +95,27 @@ async def scan_and_connect_headwind():
                                         except Exception as e:
                                             print("Error: ", e)
 
-                                        ''' Test
-                                        receiver.start_udp_listener()
+                                    
+                                        '''
                                         try:
-                                            receiver.listen_for_udp_data()
-                                        except KeyboardInterrupt:
-                                            receiver.stop_udp_listener()
+                                            if speed_value > 0:
+                                                await client.write_gatt_char(CHARACTERISTIC, bytearray([0x04, 0x04])) # Turns fan on -> bytearray([0x04, 0x04]), Turns fan off -> bytearray([0x04, 0x01]), Adjust fan Speed -> bytearray([0x02, <Decimalvalue between 1 and 100>])
+                                            elif speed_value <= 0:
+                                                await client.write_gatt_char(CHARACTERISTIC, bytearray([0x04, 0x01])) # Turn fan off
+                                            else:
+                                                print("Speed value should be between 1 and 100.")
+                                        except ValueError:
+                                            print("Error turning fan on or off.")
+
+                                        try:
+                                            if speed_value > 0:
+                                                await client.write_gatt_char(CHARACTERISTIC, bytearray([0x02, speed_value]))
+                                                print(f"Fan speed set to {speed_value}")
+                                            else:
+                                                print("Speed value should be between 1 and 100.")
+                                        except ValueError:
+                                            print("Invalid input. Please enter a number between 1 and 100.")
+
                                         '''
                                         try:
                                             if 2 <= speed_value <= 100:
@@ -113,6 +129,7 @@ async def scan_and_connect_headwind():
                                                 print("Speed value should be between 1 and 100.")
                                         except ValueError:
                                             print("Invalid input. Please enter a number between 1 and 100.")
+                                            
             except exc.BleakError as e:
                 print(f"Failed to connect/discover services of {DEVICEID.name}: {e}")
                 # Add additional error handling or logging as needed

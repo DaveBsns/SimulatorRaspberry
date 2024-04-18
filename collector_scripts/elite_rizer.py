@@ -2,14 +2,20 @@ import asyncio
 from bleak import BleakScanner, BleakClient, exc
 import socket
 
-device_name = "RIZER"
-DEVICEID = ""
+DEVICE_NAME = "RIZER"       
+DEVICE_UUID = "fc:12:65:28:cb:44"
+DEVICE_ID = ""
 
-service_uuid = "347b0001-7635-408b-8918-8ff3949ce592" # Rizer - read steering
+SERVICE_UUID = "347b0001-7635-408b-8918-8ff3949ce592" # Rizer - read steering
+SERVICE_TILT_UUID = "347b00207635408b89188ff3949ce592"
 SERVICE = ""
 
-characteristic_steering_uuid = "347b0030-7635-408b-8918-8ff3949ce592" # Rizer - read steering
-CHARACTERISTIC_STEERING = ""
+CHARACTERISTICS_STEEING_UUID = "347b0030-7635-408b-8918-8ff3949ce592" # Rizer - read steering
+CHARACTERISTIC_TILT_UUID = "347b00017635408b89188ff3949ce592" # write tilt
+
+
+characteristics_steering = ""
+
 
 
 class BluetoothCallback:
@@ -56,23 +62,24 @@ async def read_steering(client, characteristic):
 
 
 async def scan_and_connect_rizer():
-    global device_name
+    global DEVICE_NAME
 
-    global service_uuid
+    global SERVICE_UUID
     global SERVICE
 
-    global characteristic_steering_uuid
-    global CHARACTERISTIC_STEERING
+    global CHARACTERISTICS_STEEING_UUID
+    global characteristics_steering
 
     stop_event = asyncio.Event()  
 
     # Scanning and printing for BLE devices
     def callback(device, advertising_data):
-        global DEVICEID   
+        global DEVICE_ID   
         # print(device)
         # print("Test rizer")
-        if(device.name == device_name):
-            DEVICEID = device
+        if(device.name == DEVICE_NAME):
+            
+            DEVICE_ID = device
             stop_event.set()
             
     # Stops the scanning event    
@@ -86,20 +93,20 @@ async def scan_and_connect_rizer():
         '''
         await stop_event.wait()
     
-    if(DEVICEID != ""):
+    if(DEVICE_ID != ""):
         # Connecting to BLE Device
         client_is_connected = False
         while(client_is_connected == False):
             try:
-                async with BleakClient(DEVICEID, timeout=90) as client:
+                async with BleakClient(DEVICE_ID, timeout=90) as client:
                     client_is_connected = True
-                    print("Client connected to ", DEVICEID.name)
+                    print("Client connected to ", DEVICE_ID.name)
                     # return True
                     # logger.info("Device ID ", device_id)
                     for service in client.services:
                         # print("service: ", service)
                         
-                        if (service.uuid == service_uuid):
+                        if (service.uuid == SERVICE_UUID):
                                 SERVICE = service
                                 # print("[service uuid] ", SERVICE.uuid)
                                     
@@ -107,15 +114,15 @@ async def scan_and_connect_rizer():
                             # print("SERVICE", SERVICE)
                             for characteristic in SERVICE.characteristics:
                                 
-                                if("notify" in characteristic.properties and characteristic.uuid == characteristic_steering_uuid):
-                                    CHARACTERISTIC_STEERING = characteristic
+                                if("notify" in characteristic.properties and characteristic.uuid == CHARACTERISTICS_STEEING_UUID):
+                                    characteristics_steering = characteristic
                                     # print("CHARACTERISTIC: ", CHARACTERISTIC_STEERING, characteristic.properties)
                                 
                                 
                             while True:
-                                await read_steering(client, CHARACTERISTIC_STEERING)      
+                                await read_steering(client, characteristics_steering)      
             except exc.BleakError as e:
-                print(f"Failed to connect/discover services of {DEVICEID.name}: {e}")
+                print(f"Failed to connect/discover services of {DEVICE_ID.name}: {e}")
                 # Add additional error handling or logging as needed
                 # raise 
 
