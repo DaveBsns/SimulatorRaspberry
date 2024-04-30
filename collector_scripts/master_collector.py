@@ -95,15 +95,6 @@ class DataReceiver:
 
 
 if __name__ == "__main__":
-    '''
-    try:
-        data_receiver.start_udp_listener()
-    except KeyboardInterrupt:
-        print("\nKeyboardInterrupt received. Stopping the loop.")
-    finally:
-        pass
-        # udp_unity_receive_socket.close()
-    '''
     data_sender = DataSender()
 
     print("Master Collector script started...")
@@ -173,11 +164,3 @@ if __name__ == "__main__":
                 # print("Roll_Value: ", roll_value)
                 roll_value = roll_value["sensor_value"]
                 data_sender.collect_roll(roll_value)
-            '''
-            elif sock is udp_unity_receive_socket:
-                json_data = data.decode('utf-8')  # Decode bytes to string
-                # value = json.loads(data.decode())
-                unity_values = json.loads(json_data)
-                ble_fan_value = unity_values["bleFan"]
-                print("ble fan from unity: ", ble_fan_value)
-            '''
