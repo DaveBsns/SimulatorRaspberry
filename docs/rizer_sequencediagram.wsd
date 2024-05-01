@@ -1,0 +1,23 @@
+@startuml 
+title "RIZER"
+
+participant Unity
+participant Master_Collector
+participant UDP_Handler
+participant BluetoothCallback
+participant RIZER
+
+
+
+UDP_Handler -> UDP_Handler: listen for tilt
+Unity -> Master_Collector: send new tilt
+Master_Collector -> UDP_Handler: send new tilt
+BluetoothCallback -> RIZER: send tilt
+
+BluetoothCallback -> BluetoothCallback: listen for steering
+RIZER -> BluetoothCallback: send steering
+BluetoothCallback -> UDP_Handler: send steering
+UDP_Handler -> Master_Collector: send steering
+Master_Collector -> Unity: send steering
+
+@enduml

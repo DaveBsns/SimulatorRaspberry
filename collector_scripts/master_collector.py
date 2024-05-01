@@ -57,11 +57,16 @@ class DataReceiver:
         # self.udp_unity_receive_port = 12345
         self.udp_unity_receive_socket = None
         self.ble_fan_speed = 0
+        self.ble_tilt = 0
     
     
     def get_fan_speed(self):
         print("Self ble fan speed: ", self.ble_fan_speed)
         return self.ble_fan_speed
+
+    def get_tilt(self):
+        print("Self ble tilt: ", self.ble_tilt)
+        return self.ble_tilt
     
     def open_udp_socket(self):
         # Create a UDP socket
@@ -82,8 +87,10 @@ class DataReceiver:
             # value = json.loads(data.decode())
             unity_values = json.loads(json_data)
             ble_fan_value = unity_values["bleFan"]
+            ble_tilt_value = unity_values["bleTilt"]
             # print("ble fan from unity: ", ble_fan_value)
             self.ble_fan_speed = ble_fan_value
+            self.ble_tilt = ble_tilt_value                      #maybe ble_xx_value is not nessesary and we can use the self.ble_xx directly
         except Exception as e:
             print(f"Error while receiving UDP data: {e}")
 
