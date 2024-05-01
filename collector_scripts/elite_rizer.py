@@ -2,6 +2,7 @@ import asyncio
 from bleak import BleakClient, exc
 import socket
 import time
+from master_collector import DataReceiver
 
 DEVICE_NAME = "RIZER"       
 DEVICE_UUID = "fc:12:65:28:cb:44"
@@ -18,6 +19,8 @@ tilt_service = ""
 
 stering_ready = 0
 tilt_ready = 0
+
+stored_tilt_value = 0
 
 
 CHARACTERISTICS_STEEING_UUID = "347b0030-7635-408b-8918-8ff3949ce592" # Rizer - read steering
@@ -75,8 +78,21 @@ async def write_tilt(client, characteristic):
         #TODO Write bt stuff
         print("BT stuff")
         await client.write_gatt_char(CHARACTERISTIC_TILT_UUID, bytes.fromhex(INCREASE_TILT_HEX), response=True)
+        stored_tilt_value += 0.5
     except Exception as e:
         print("Error: ", e) 
+
+# check if the value of the tilt in unity is the same as on the rizer (currently not possible to check the value. just to store the changes)
+def get_new_tilt_value():
+    try:
+        receiver.start_udp_listener()
+        tilt_value = receiver.get_tilt()
+        print("RIZER tilt: ", tilt_value)
+        if tilt_value != stored_tilt_value:
+            stored_tilt_value = tilt_value
+
+    except Exception as e:
+        print("Error: ", e)
            
 
 async def scan_and_connect_rizer():
@@ -151,3 +167,5 @@ async def scan_and_connect_rizer():
             # raise 
 
 asyncio.run(scan_and_connect_rizer())
+
+'create UDP_Handler in own task'
