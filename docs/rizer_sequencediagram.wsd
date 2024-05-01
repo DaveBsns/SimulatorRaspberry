@@ -8,14 +8,25 @@ participant BluetoothCallback
 participant RIZER
 
 
+loop
+    UDP_Handler -> UDP_Handler: listen for tilt
+end
 
-UDP_Handler -> UDP_Handler: listen for tilt
 Unity -> Master_Collector: send new tilt
 Master_Collector -> UDP_Handler: send new tilt
-BluetoothCallback -> RIZER: send tilt
 
-BluetoothCallback -> BluetoothCallback: listen for steering
-RIZER -> BluetoothCallback: send steering
+UDP_Handler -> BluetoothCallback: computed tilt commands
+
+loop "tilt 0.5"
+    BluetoothCallback -> RIZER: send tilt
+end
+
+loop 
+    BluetoothCallback -> BluetoothCallback: listen for steering
+    RIZER -> BluetoothCallback: send steering
+end
+
+
 BluetoothCallback -> UDP_Handler: send steering
 UDP_Handler -> Master_Collector: send steering
 Master_Collector -> Unity: send steering
