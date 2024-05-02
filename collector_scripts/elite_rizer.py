@@ -19,6 +19,8 @@ tilt_service = ""
 stering_ready = 0
 tilt_ready = 0
 
+udp_tilt_data = 0
+
 
 CHARACTERISTICS_STEEING_UUID = "347b0030-7635-408b-8918-8ff3949ce592" # Rizer - read steering
 CHARACTERISTIC_TILT_UUID = "347b0020-7635-408b-8918-8ff3949ce592" # write tilt
@@ -51,13 +53,18 @@ class BluetoothCallback:
 
         self.send_steering_data_udp(self.received_steering_data)
 
-
+    #send steering data over udp
     def send_steering_data_udp(self, steering_data):
         # Create a UDP socket
         # print(steering_data)
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
             # Send speed_data
             udp_socket.sendto(str(steering_data).encode(), (self.udp_ip, self.udp_port))
+
+    def listening_udp(self, udp_tilt_data):
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
+            udp_socket.listen(str(udp_tilt_data).encode(), (self.udp_ip, self.udp_port))
+            print("Hello: ", udp_tilt_data)
 
 async def read_steering(client, characteristic):
     bluetooth_callback = BluetoothCallback()
@@ -151,3 +158,9 @@ async def scan_and_connect_rizer():
             # raise 
 
 asyncio.run(scan_and_connect_rizer())
+# TODO
+# connect rizer over BLE
+# ascynchron listen udp
+# asynchron listen steering 
+# write steering over udp
+# write Rizer over BLE
