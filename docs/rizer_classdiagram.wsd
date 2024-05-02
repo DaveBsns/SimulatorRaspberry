@@ -1,15 +1,16 @@
 @startuml
 
-class Bar1
-class Bar2
-together {
-  class Together1
-  class Together2
-  class Together3
+class BluetoothCallback {
+  notify_steering_callback
+  read_steering
+  write_tilt
+  scan_and_connect_rizer
 }
-Together1 - Together2
-Together2 - Together3
-Together2 -[hidden]--> Bar1
-Bar1 -[hidden]> Bar2
+
+class UDP_Handler{
+  send_steering_data_udp
+  listening_udp
+  get_new_tilt_value
+}
 
 @enduml
