@@ -79,8 +79,8 @@ class BLE_Handler:
     
     async def read_and_ride_rizer(self, client):
         while(True):
-            #await self.read_steering(client, steering_characteristics)
-            self.read_steering(client, steering_characteristics)
+            await self.read_steering(client, steering_characteristics)
+            #self.read_steering(client, steering_characteristics)
             print("read steering rizer")
             if (tilt_received == 1):
                 await self.write_tilt(client)
@@ -93,7 +93,7 @@ class BLE_Handler:
         print("read steering")
         try:
             await client.start_notify(characteristic, self.notify_steering_callback)
-            await asyncio.sleep(1) # keeps the connection open for 10 seconds
+            await asyncio.sleep(10) # keeps the connection open for 10 seconds
             await client.stop_notify(characteristic.uuid)                                  
         except Exception as e:
             print("Error: ", e)                    
@@ -133,10 +133,11 @@ class BLE_Handler:
         global tilt_ready                       #connection to tilt BLE service ready
         
         # Connecting to BLE Device
+        print("Connecting to BLE Device")
         client_is_connected = False
         while(client_is_connected == False):
             try:
-                async with BleakClient(self.DEVICE_UUID, timeout=90) as client:
+                with BleakClient(self.DEVICE_UUID, timeout=90) as client:
                     client_is_connected = True
                     print("Client connected to ", self.DEVICE_UUID)
                     for service in client.services:
@@ -179,10 +180,11 @@ class BLE_Handler:
                 # raise
 
 async def main():
-    udp_handler_task = asyncio.create_task(udp.main())
     ble_handler_task = asyncio.create_task(ble.main())
+    udp_handler_task = asyncio.create_task(udp.main())
 
-    await asyncio.gather(udp_handler_task, ble_handler_task)
+    await ble_handler_task
+    await udp_handler_task
 
 # Creating instances of handlers
 udp = UDP_Handler()                

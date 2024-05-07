@@ -65,7 +65,7 @@ class DataReceiver:
         return self.ble_fan_speed
 
     def get_tilt(self):
-        print("Self ble tilt: ", self.ble_tilt)
+        #print("Self ble tilt: ", self.ble_tilt)
         return self.ble_tilt
     
     def open_udp_socket(self):
