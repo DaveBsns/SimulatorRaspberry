@@ -56,7 +56,7 @@ The individual cyclist actions are taken from the requirements document and name
 |-----|-----|-----|-----|-----|-----|-----|
 |  R3a<br/> | Driving past parked car (regular parking)<br/> | 1<br/> | x<br/> |  |  |  |
 |  R3a<br/> | Driving past parked car (bad parking going into the bicycle lane)<br/> | 2<br/> |  |  | x<br/> |  |
-|  R3b<br/> | Overtaking other cyclists<br/> | 2<br/> | x<br/> | x<br/> |  |  |
+|  R3b<br/> | Overtaking other cyclists<br/> | 3<br/> | x<br/> | x<br/> |  |  |
 |  R3c<br/> | Driving through a narrow point<br/> | 3<br/> | x<br/> | (x)<br/> | (x)<br/> |  |
 
 ## Use Case R4 - Expansion of driving practice at different times of the day
@@ -68,13 +68,13 @@ The individual cyclist actions are taken from the requirements document and name
 ## Use Case R5 - Weather influences when cycling
 |  Use Case Number<br/> | Description<br/> | Scenario<br/> | Pedal sensor aka. Direto Trainer<br/> | Rocker Plate sensors<br/> | Brake sensor<br/> | Rizer<br/> |
 |-----|-----|-----|-----|-----|-----|-----|
-|  R5a<br/> | Driving on wet road<br/> | 2<br/> | x<br/> |  |  |  |
-|  R5b<br/> | Driving in rain<br/> | 2<br/> | x<br/> |  |  |  |
-|  R5b<br/> | Driving in fog<br/> | 3<br/> | x<br/> |  |  |  |
-|  R5c<br/> | Driving in snow and slippery conditions<br/> | 3<br/> | x<br/> | x<br/> |  |  |
-|  R5c<br/> | Driving in snow and slippery conditions on a bridge<br/> | 3<br/> | x<br/> | x<br/> |  |  |
-|  R5d<br/> | Braking for an obstacle visible only late because of bad weather conditions (combine with R1f)<br/> | 3<br/> |  |  | x<br/> |  |
-|  R5d<br/> | Braking in slippery weather conditions<br/> | 3<br/> |  | x<br/> | x<br/> |  |
+|  R5a<br/> | Driving on wet road<br/> | 3<br/> | x<br/> |  |  |  |
+|  R5b<br/> | Driving in rain<br/> | 3<br/> | x<br/> |  |  |  |
+|  R5b<br/> | Driving in fog<br/> | 4<br/> | x<br/> |  |  |  |
+|  R5c<br/> | Driving in snow and slippery conditions<br/> | 4<br/> | x<br/> | x<br/> |  |  |
+|  R5c<br/> | Driving in snow and slippery conditions on a bridge<br/> | 4<br/> | x<br/> | x<br/> |  |  |
+|  R5d<br/> | Braking for an obstacle visible only late because of bad weather conditions (combine with R1f)<br/> | 4<br/> |  |  | x<br/> |  |
+|  R5d<br/> | Braking in slippery weather conditions<br/> | 4<br/> |  | x<br/> | x<br/> |  |
 |  R5e<br/> | Driving at night —> see no difference to R4b<br/> | 3<br/> | x<br/> |  |  |  |
 |  R5f<br/> | Driving in the city with poor visibility —> combine with R5b and pretty much any other use case<br/> | 3<br/> | x<br/> |  |  |  |
 |  R5f<br/> | Driving in the forest with poor visibility —> combine with R5b<br/> | 4<br/> | x<br/> |  |  |  |
@@ -124,7 +124,7 @@ The individual cyclist actions are taken from the requirements document and name
 ## A5 - Cycling under varying weather conditions at varying times of day and at night
 |  Use Case Number<br/> | Description<br/> | Scenario<br/> | Pedal sensor aka. Direto Trainer<br/> | Rocker Plate sensors<br/> | Brake sensor<br/> | Rizer<br/> |
 |-----|-----|-----|-----|-----|-----|-----|
-|  A5a<br/> | Driving on a wet road with cars next to it (combine with R5a)<br/> | 2<br/> | x<br/> |  |  |  |
+|  A5a<br/> | Driving on a wet road with cars next to it (combine with R5a)<br/> | 3<br/> | x<br/> |  |  |  |
 |  A5b<br/> | Driving in rain/fog or poor visibility including car headlights (combine with R5b)<br/> | 3<br/> | x<br/> |  |  |  |
 |  A5c<br/> | Driving in snow and slippery conditions, possibly with splashing slush<br/> | 3<br/> | x<br/> |  |  |  |
 |  A5d<br/> | Driving in different weather conditions at dusk and at night (combine with A4a, R4b…)<br/> | 2<br/> | x<br/> |  |  |  |
