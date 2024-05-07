@@ -17,17 +17,17 @@ class UDP_Handler:
             self.udp_ip = "127.0.0.1" # Send the rizer data to the master_collector.py script via UDP over localhost
             self.udp_port = 2222
             print("udp handler started")
+            
 
     async def main(self):
         receiver = DataReceiver()
-        receiver.open_udp_socket()
         while(True):
-            if (steering_received == 1):
+            if (steering_received == 1):                            #when steering value has chanched, send it to unity
                 self.send_steering_data_udp(self.steering_data)
             try:
-                receiver.start_udp_listener()
-                tilt_value = receiver.get_tilt()
-                self.check_new_tilt(tilt_value)
+                #self.listening_udp                 maybe not needed
+                tilt_value = receiver.get_tilt()                    #read tilt from unity
+                self.check_new_tilt(tilt_value)                     #check if tilt value has changed or is still the same
 
             except Exception as e:
                 print("Error: ", e)
@@ -40,17 +40,17 @@ class UDP_Handler:
             # Send speed_data
             udp_socket.sendto(str(steering_data).encode(), (self.udp_ip, self.udp_port))
 
-    def listening_udp(self, udp_tilt_data):
+    def listening_udp(self):
+        udp_tilt_data = 0
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
             udp_socket.listen(str(udp_tilt_data).encode(), (self.udp_ip, self.udp_port))
             print("Hello: ", udp_tilt_data)
     
     # check if the value of the tilt in unity is the same as on the rizer (currently not possible to check the value. just to store the changes)
     def check_new_tilt(self, udp_tilt_value):
-        print("check new tilt")
         global tilt_received
         global tilt_value
-        print("RIZER tilt: ", udp_tilt_value)
+        #print("RIZER tilt: ", udp_tilt_value)
         if tilt_value != udp_tilt_value:
             tilt_value = udp_tilt_value
             tilt_received = 1
@@ -79,15 +79,21 @@ class BLE_Handler:
     
     async def read_and_ride_rizer(self, client):
         while(True):
-            await self.read_steering(client, steering_characteristics)
-            await self.write_tilt(client)
+            #await self.read_steering(client, steering_characteristics)
+            self.read_steering(client, steering_characteristics)
+            print("read steering rizer")
+            if (tilt_received == 1):
+                await self.write_tilt(client)
+                tilt_received = 0
+                print("tilt writed")
             print(tilt_characteristics)
 
 
     async def read_steering(self, client, characteristic):
+        print("read steering")
         try:
             await client.start_notify(characteristic, self.notify_steering_callback)
-            # await asyncio.sleep(10) # keeps the connection open for 10 seconds
+            await asyncio.sleep(1) # keeps the connection open for 10 seconds
             await client.stop_notify(characteristic.uuid)                                  
         except Exception as e:
             print("Error: ", e)                    
