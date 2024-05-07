@@ -21,7 +21,7 @@ tilt_ready = 0
 
 stored_tilt_value = 0
 
-CHARACTERISTICS_STEEING_UUID = "347b0030-7635-408b-8918-8ff3949ce592" # Rizer - read steering
+CHARACTERISTICS_STEERING_UUID = "347b0030-7635-408b-8918-8ff3949ce592" # Rizer - read steering
 CHARACTERISTIC_TILT_UUID = "347b0020-7635-408b-8918-8ff3949ce592" # write tilt
 
 
@@ -106,12 +106,12 @@ async def scan_and_connect_rizer():
     global steering_service
     global tilt_service
 
-    global CHARACTERISTICS_STEEING_UUID
+    global CHARACTERISTICS_STEERING_UUID
     global steering_characteristics
     global tilt_characteristics
 
-    global stering_ready
-    global tilt_ready
+    global stering_ready                    #connection to steering BLE service ready
+    global tilt_ready                       #connection to tilt BLE service ready
     
     # Connecting to BLE Device
     client_is_connected = False
@@ -135,7 +135,7 @@ async def scan_and_connect_rizer():
                             # print("SERVICE", SERVICE)
                             for characteristic in steering_service.characteristics:
                                 
-                                if("notify" in characteristic.properties and characteristic.uuid == CHARACTERISTICS_STEEING_UUID):
+                                if("notify" in characteristic.properties and characteristic.uuid == CHARACTERISTICS_STEERING_UUID):
                                     steering_characteristics = characteristic
                                     # print("CHARACTERISTIC: ", CHARACTERISTIC_STEERING, characteristic.properties)
                                 print("IF")
