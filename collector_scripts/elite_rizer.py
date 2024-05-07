@@ -60,7 +60,7 @@ class BluetoothCallback:
             # Send speed_data
             udp_socket.sendto(str(steering_data).encode(), (self.udp_ip, self.udp_port))
 
-    def listening_udp(self, udp_tilt_data):
+    def listening_udp(self):
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
             udp_socket.listen(str(udp_tilt_data).encode(), (self.udp_ip, self.udp_port))
             print("Hello: ", udp_tilt_data)

@@ -20,11 +20,12 @@ class UDP_Handler:
 
     async def main(self):
         receiver = DataReceiver()
+        receiver.open_udp_socket()
         while(True):
             if (steering_received == 1):
                 self.send_steering_data_udp(self.steering_data)
             try:
-                self.listening_udp()
+                receiver.start_udp_listener()
                 tilt_value = receiver.get_tilt()
                 self.check_new_tilt(tilt_value)
 
