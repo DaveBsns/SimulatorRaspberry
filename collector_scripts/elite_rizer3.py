@@ -137,7 +137,7 @@ class BLE_Handler:
         client_is_connected = False
         while(client_is_connected == False):
             try:
-                with BleakClient(self.DEVICE_UUID, timeout=90) as client:
+                async with BleakClient(self.DEVICE_UUID, timeout=90) as client:
                     client_is_connected = True
                     print("Client connected to ", self.DEVICE_UUID)
                     for service in client.services:
