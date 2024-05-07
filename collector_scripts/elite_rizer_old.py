@@ -2,13 +2,13 @@ import asyncio
 from bleak import BleakClient, exc
 import socket
 import time
-from master_collector import DataReceiver
 
 DEVICE_NAME = "RIZER"       
 DEVICE_UUID = "fc:12:65:28:cb:44"
 
 SERVICE_STEERING_UUID = "347b0001-7635-408b-8918-8ff3949ce592" # Rizer - read steering
 SERVICE_TILT_UUID = "347b0001-7635-408b-8918-8ff3949ce592"
+
 
 INCREASE_TILT_HEX = "060102"
 DECREASE_TILT_HEX = "060402"
@@ -19,9 +19,8 @@ tilt_service = ""
 stering_ready = 0
 tilt_ready = 0
 
-stored_tilt_value = 0
 
-CHARACTERISTICS_STEERING_UUID = "347b0030-7635-408b-8918-8ff3949ce592" # Rizer - read steering
+CHARACTERISTICS_STEEING_UUID = "347b0030-7635-408b-8918-8ff3949ce592" # Rizer - read steering
 CHARACTERISTIC_TILT_UUID = "347b0020-7635-408b-8918-8ff3949ce592" # write tilt
 
 
@@ -52,18 +51,13 @@ class BluetoothCallback:
 
         self.send_steering_data_udp(self.received_steering_data)
 
-    #send steering data over udp
+
     def send_steering_data_udp(self, steering_data):
         # Create a UDP socket
         # print(steering_data)
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
             # Send speed_data
             udp_socket.sendto(str(steering_data).encode(), (self.udp_ip, self.udp_port))
-
-    def listening_udp(self, udp_tilt_data):
-        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
-            udp_socket.listen(str(udp_tilt_data).encode(), (self.udp_ip, self.udp_port))
-            print("Hello: ", udp_tilt_data)
 
 async def read_steering(client, characteristic):
     bluetooth_callback = BluetoothCallback()
@@ -81,22 +75,8 @@ async def write_tilt(client, characteristic):
         #TODO Write bt stuff
         print("BT stuff")
         await client.write_gatt_char(CHARACTERISTIC_TILT_UUID, bytes.fromhex(INCREASE_TILT_HEX), response=True)
-        stored_tilt_value += 0.5
     except Exception as e:
         print("Error: ", e) 
-
-# check if the value of the tilt in unity is the same as on the rizer (currently not possible to check the value. just to store the changes)
-def get_new_tilt_value():
-    receiver = DataReceiver()
-    try:
-        receiver.start_udp_listener()
-        tilt_value = receiver.get_tilt()
-        print("RIZER tilt: ", tilt_value)
-        if tilt_value != stored_tilt_value:
-            stored_tilt_value = tilt_value
-
-    except Exception as e:
-        print("Error: ", e)
            
 
 async def scan_and_connect_rizer():
@@ -107,12 +87,12 @@ async def scan_and_connect_rizer():
     global steering_service
     global tilt_service
 
-    global CHARACTERISTICS_STEERING_UUID
+    global CHARACTERISTICS_STEEING_UUID
     global steering_characteristics
     global tilt_characteristics
 
-    global stering_ready                    #connection to steering BLE service ready
-    global tilt_ready                       #connection to tilt BLE service ready
+    global stering_ready
+    global tilt_ready
     
     # Connecting to BLE Device
     client_is_connected = False
@@ -136,7 +116,7 @@ async def scan_and_connect_rizer():
                             # print("SERVICE", SERVICE)
                             for characteristic in steering_service.characteristics:
                                 
-                                if("notify" in characteristic.properties and characteristic.uuid == CHARACTERISTICS_STEERING_UUID):
+                                if("notify" in characteristic.properties and characteristic.uuid == CHARACTERISTICS_STEEING_UUID):
                                     steering_characteristics = characteristic
                                     # print("CHARACTERISTIC: ", CHARACTERISTIC_STEERING, characteristic.properties)
                                 print("IF")
@@ -171,5 +151,3 @@ async def scan_and_connect_rizer():
             # raise 
 
 asyncio.run(scan_and_connect_rizer())
-
-'create UDP_Handler in own task'
