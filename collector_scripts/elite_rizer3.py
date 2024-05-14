@@ -5,24 +5,29 @@ import time
 from master_collector import DataReceiver
 
 #global variables
-tilt_received       #received tilt data form UDP. Ready to send over BLE
-steering_received   #received steering data from RIZER. Ready to send over UDP
-tilt_value
-current_tilt_value_on_razer
+tilt_received = 0                           #received tilt data form UDP. Ready to send over BLE
+steering_received = 0                       #received steering data from RIZER. Ready to send over UDP
+tilt_value = None
+current_tilt_value_on_razer = None          #received tilt data form UDP. Ready to send over BLE
+
 
 class UDP_Handler:
-    global tilt_value
-    global tilt_received
 
     def __init__(self):
-            self.received_steering_data = 0  # Initialize with None or any default value
-            self.udp_ip = "127.0.0.1" # Send the rizer data to the master_collector.py script via UDP over localhost
-            self.udp_port = 2222
-            print("udp handler started")
+        global tilt_value
+        global tilt_received
+        self.received_steering_data = 0  # Initialize with None or any default value
+        self.udp_ip = "127.0.0.1" # Send the rizer data to the master_collector.py script via UDP over localhost
+        self.udp_port = 2222
+        print("udp handler started")
             
 
     async def main(self):
+        global tilt_value
+        global steering_received
         receiver = DataReceiver()
+        self.steering_data = None
+        steering_received = None
         while(True):
             if (steering_received == 1):                            #when steering value has chanched, send it to unity
                 await self.send_steering_data_udp(self.steering_data)
