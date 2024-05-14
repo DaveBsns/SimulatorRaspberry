@@ -4,13 +4,15 @@ import socket
 import time
 from master_collector import DataReceiver
 
-tilt_received = 0       #received tilt data form UDP. Ready to send over BLE
-steering_received = 0   #received steering data from RIZER. Ready to send over UDP
-tilt_value = 0
-current_tilt_value_on_razer = 0
+#global variables
+tilt_received       #received tilt data form UDP. Ready to send over BLE
+steering_received   #received steering data from RIZER. Ready to send over UDP
+tilt_value
+current_tilt_value_on_razer
 
 class UDP_Handler:
     global tilt_value
+    global tilt_received
 
     def __init__(self):
             self.received_steering_data = 0  # Initialize with None or any default value
@@ -32,6 +34,12 @@ class UDP_Handler:
             except Exception as e:
                 print("Error: ", e)
     
+    def set_tilt_received(received):
+        tilt_received = received
+    
+    def get_til_received():
+        return tilt_received
+
     #send steering data over udp
     def send_steering_data_udp(self, steering_data):
         # Create a UDP socket
@@ -75,24 +83,26 @@ class BLE_Handler:
     global steering_service
     global tilt_service
 
-    global BleakClient
+    global client
 
     global current_tilt_value_on_razer
     
-    async def read_and_ride_rizer(self, client):
+    async def read_and_ride_rizer(self):
+        global tilt_received
+        global tilt_characteristics
         print("read and write")
         while(True):
-            await self.read_steering(client, steering_characteristics)
+            await self.read_steering(self.steering_characteristics)
             #self.read_steering(client, steering_characteristics)
             print("read steering rizer")
             if (tilt_received == 1):
-                await self.write_tilt(client)
+                await self.write_tilt(self.bleakClient)
                 tilt_received = 0
                 print("tilt writed")
-            print(tilt_characteristics)
+            print(self.tilt_characteristics)
 
 
-    async def read_steering(self, client, characteristic):
+    async def read_steering(self, characteristic):
         print("read steering")
         try:
             await client.start_notify(characteristic, self.notify_steering_callback)
@@ -125,7 +135,7 @@ class BLE_Handler:
         udp.send_steering_data_udp(self.received_steering_data)
 
 
-    async def ble_handler_init(self):
+    def __init__(self):
         global steering_characteristics
         global tilt_characteristics
 
@@ -135,53 +145,56 @@ class BLE_Handler:
         global steering_ready                   #connection to steering BLE service ready
         global tilt_ready                       #connection to tilt BLE service ready
 
-        global bleakClient
+        global client
         
         # Connecting to BLE Device
         print("Connecting to BLE Device")
         client_is_connected = False
-        steering_ready = 0
-        tilt_ready = 0
-        tilt_received = 0
+        self.steering_ready = 0
+        self.tilt_ready = 0
+        self.tilt_received = 0
+        self.steering_characteristics = None
+        self.tilt_characteristics = 0
+        self.client = None
+        
         while(client_is_connected == False):
             try:
-                async with BleakClient(self.DEVICE_UUID, timeout=90) as client:
-                    
-                    client_is_connected = True
-                    print("Client connected to ", self.DEVICE_UUID)
-                    for service in client.services:
-                        if (service.uuid == self.SERVICE_STEERING_UUID):
-                            steering_service = service
-                            print("[service uuid] ", steering_service.uuid)
+                client = BleakClient(self.DEVICE_UUID, timeout=90)
+                #with BleakClient(self.DEVICE_UUID, timeout=90) as client:
+                client_is_connected = True
+                print("Client connected to ", self.DEVICE_UUID)
+                for service in client.services:
+                    if (service.uuid == self.SERVICE_STEERING_UUID):
+                        steering_service = service
+                        print("[service uuid] ", steering_service.uuid)
 
-                            if (steering_service != ""):
-                                # print("SERVICE", SERVICE)
-                                for characteristic in steering_service.characteristics:
-                                    
-                                    if("notify" in characteristic.properties and characteristic.uuid == self.CHARACTERISTICS_STEERING_UUID):
-                                        steering_characteristics = characteristic
-                                        # print("CHARACTERISTIC: ", CHARACTERISTIC_STEERING, characteristic.properties)
-                                    print("IF")
+                        if (steering_service != ""):
+                            # print("SERVICE", SERVICE)
+                            for characteristic in steering_service.characteristics:
+                                
+                                if("notify" in characteristic.properties and characteristic.uuid == self.CHARACTERISTICS_STEERING_UUID):
+                                    self.steering_characteristics = characteristic
+                                    # print("CHARACTERISTIC: ", CHARACTERISTIC_STEERING, characteristic.properties)
+                                print("IF")
 
-                            print(steering_ready)
-                            steering_ready = 1 
+                        print(steering_ready)
+                        steering_ready = 1 
 
-                        if (service.uuid == self.SERVICE_TILT_UUID):
-                            tilt_service = service
-                            print("[service uuid] ", tilt_service.uuid)
+                    if (service.uuid == self.SERVICE_TILT_UUID):
+                        tilt_service = service
+                        print("[service uuid] ", tilt_service.uuid)
 
-                            if (tilt_service != ""):
-                                for characteristic in tilt_service.characteristics:
+                        if (tilt_service != ""):
+                            for characteristic in tilt_service.characteristics:
 
-                                    print("characteristics UUID: ", characteristic.uuid)
-                                    if("notify" in characteristic.properties and characteristic.uuid == self.CHARACTERISTIC_TILT_UUID):
-                                        tilt_characteristics = characteristic
-                            print(tilt_ready)
-                            tilt_ready = 1
+                                print("characteristics UUID: ", characteristic.uuid)
+                                if("notify" in characteristic.properties and characteristic.uuid == self.CHARACTERISTIC_TILT_UUID):
+                                    tilt_characteristics = characteristic
+                        print(tilt_ready)
+                        tilt_ready = 1
 
-                    if (steering_ready == 1 and tilt_ready == 1):
-                        print("all ready!")
-                        await self.read_and_ride_rizer(client)
+                if (steering_ready == 1 and tilt_ready == 1):
+                    print("all ready!")
                         
 
             except exc.BleakError as e:
@@ -190,8 +203,8 @@ class BLE_Handler:
                 # raise
 
 async def main():
-    ble_handler_task = asyncio.create_task(ble.ble_handler_init())
-    print("ble main start")
+    ble_handler_task = asyncio.create_task(ble.read_and_ride_rizer())
+    print("ble main started")
     #udp_handler_task = asyncio.create_task(udp.main())
     #print("udp main start")
 
