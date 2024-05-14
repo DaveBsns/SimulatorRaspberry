@@ -168,7 +168,11 @@ class BLE_Handler:
             try:
                 client = BleakClient(self.DEVICE_UUID, timeout=90)
                 #with BleakClient(self.DEVICE_UUID, timeout=90) as client:
-                client.connect()
+                try:
+                    await client.connect()
+                except Exception as e:
+                    print("Error: ", e)
+
                 client_is_connected = True
                 print("Client connected to ", self.DEVICE_UUID)
                 for service in client.services:
