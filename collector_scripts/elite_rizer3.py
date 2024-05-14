@@ -161,7 +161,9 @@ class BLE_Handler:
         self.tilt_received = 0
         self.steering_characteristics = None
         self.tilt_characteristics = 0
-        
+
+    async def async_init(self):
+    
         while(client_is_connected == False):
             try:
                 client = BleakClient(self.DEVICE_UUID, timeout=90)
@@ -217,7 +219,9 @@ async def main():
     #udp_handler_task = asyncio.create_task(udp.main())
     #print("udp main start")
 
-    await ble_handler_task
+    await ble.async_init()
+    await ble_handler_task()
+
 
     #await udp_handler_task
 
