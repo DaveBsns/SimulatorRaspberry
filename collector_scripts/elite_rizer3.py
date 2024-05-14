@@ -218,8 +218,6 @@ async def main():
     print("ble main started")
     #udp_handler_task = asyncio.create_task(udp.main())
     #print("udp main start")
-
-    await ble.async_init()
     await ble_handler_task()
 
 
@@ -228,5 +226,9 @@ async def main():
 # Creating instances of handlers
 udp = UDP_Handler()                
 ble = BLE_Handler()
+
+# Call async_init right after the instance is created
+asyncio.run(ble.async_init())
+
 print("asyncio start")
 asyncio.run(main())
