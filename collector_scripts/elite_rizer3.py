@@ -114,12 +114,18 @@ class BLE_Handler:
 
 
     async def read_steering(self):
+        data = bytearray(8)
+        sender = 0
         await asyncio.sleep(1)
         print("read steering")
         try:
             print("should reading...")
-            await client.start_notify(self.steering_characteristics, self.notify_steering_callback())
+            await client.start_notify(self.steering_characteristics, self.notify_steering_callback(sender, data))
+            # Access the notification data using data argument
+            print(f"Steering data: {sender}")
+            print(f"Steering data: {data}")
             await asyncio.sleep(1) # keeps the connection open for 10 seconds
+            print("test here")
             await client.stop_notify(self.steering_characteristics.uuid)                                  
         except Exception as e:
             print("Error: ", e)                    
@@ -134,9 +140,9 @@ class BLE_Handler:
         except Exception as e:
             print("Error: ", e) 
 
-    def notify_steering_callback(self):
+    def notify_steering_callback(data):
         print("notify steering")
-        data = bytearray(123)
+        data = bytearray(data)
         steering = 0.0
         
         if data[3] == 65:
@@ -146,11 +152,9 @@ class BLE_Handler:
         
         self.received_steering_data = steering
         print(self.received_steering_data)
-
         udp.send_steering_data_udp(self.received_steering_data)
 
 
-    def __init__(self):
     def __init__(self):
         global steering_characteristics
         global tilt_characteristics
