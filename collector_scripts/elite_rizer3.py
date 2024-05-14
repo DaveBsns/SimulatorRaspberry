@@ -151,6 +151,7 @@ class BLE_Handler:
 
 
     def __init__(self):
+    def __init__(self):
         global steering_characteristics
         global tilt_characteristics
 
@@ -160,6 +161,7 @@ class BLE_Handler:
         #global steering_ready                   #connection to steering BLE service ready
         #global tilt_ready                       #connection to tilt BLE service ready
 
+        global client_is_connected
         global client_is_connected
         
         # Connecting to BLE Device
