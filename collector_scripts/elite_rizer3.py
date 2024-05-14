@@ -9,6 +9,7 @@ tilt_received = 0                           #received tilt data form UDP. Ready 
 steering_received = 0                       #received steering data from RIZER. Ready to send over UDP
 tilt_value = None
 current_tilt_value_on_razer = None          #received tilt data form UDP. Ready to send over BLE
+client = None
 
 
 class UDP_Handler:
@@ -88,20 +89,19 @@ class BLE_Handler:
     global steering_service
     global tilt_service
 
-    global client
-
     global current_tilt_value_on_razer
     
     async def read_and_ride_rizer(self):
         global tilt_received
         global tilt_characteristics
+        global client
         print("read and write")
         while(True):
             await self.read_steering(self.steering_characteristics)
             #self.read_steering(client, steering_characteristics)
             print("read steering rizer")
             if (tilt_received == 1):
-                await self.write_tilt(self.bleakClient)
+                await self.write_tilt(client)
                 tilt_received = 0
                 print("tilt writed")
             print(self.tilt_characteristics)
@@ -116,7 +116,8 @@ class BLE_Handler:
         except Exception as e:
             print("Error: ", e)                    
 
-    async def write_tilt(self, client):
+    async def write_tilt(self):
+        global client
         global tilt_received
         try:
             await client.write_gatt_char(self.CHARACTERISTIC_TILT_UUID, bytes.fromhex(self.INCREASE_TILT_HEX), response=True)
@@ -160,7 +161,6 @@ class BLE_Handler:
         self.tilt_received = 0
         self.steering_characteristics = None
         self.tilt_characteristics = 0
-        self.client = None
         
         while(client_is_connected == False):
             try:
