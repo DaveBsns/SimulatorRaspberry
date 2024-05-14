@@ -166,40 +166,41 @@ class BLE_Handler:
             try:
                 client = BleakClient(self.DEVICE_UUID, timeout=90)
                 #with BleakClient(self.DEVICE_UUID, timeout=90) as client:
-                client_is_connected = True
-                print("Client connected to ", self.DEVICE_UUID)
-                for service in client.services:
-                    if (service.uuid == self.SERVICE_STEERING_UUID):
-                        steering_service = service
-                        print("[service uuid] ", steering_service.uuid)
+                with client:
+                    client_is_connected = True
+                    print("Client connected to ", self.DEVICE_UUID)
+                    for service in client.services:
+                        if (service.uuid == self.SERVICE_STEERING_UUID):
+                            steering_service = service
+                            print("[service uuid] ", steering_service.uuid)
 
-                        if (steering_service != ""):
-                            # print("SERVICE", SERVICE)
-                            for characteristic in steering_service.characteristics:
-                                
-                                if("notify" in characteristic.properties and characteristic.uuid == self.CHARACTERISTICS_STEERING_UUID):
-                                    self.steering_characteristics = characteristic
-                                    # print("CHARACTERISTIC: ", CHARACTERISTIC_STEERING, characteristic.properties)
-                                print("IF")
+                            if (steering_service != ""):
+                                # print("SERVICE", SERVICE)
+                                for characteristic in steering_service.characteristics:
+                                    
+                                    if("notify" in characteristic.properties and characteristic.uuid == self.CHARACTERISTICS_STEERING_UUID):
+                                        self.steering_characteristics = characteristic
+                                        # print("CHARACTERISTIC: ", CHARACTERISTIC_STEERING, characteristic.properties)
+                                    print("IF")
 
-                        print(steering_ready)
-                        steering_ready = 1 
+                            print(steering_ready)
+                            steering_ready = 1 
 
-                    if (service.uuid == self.SERVICE_TILT_UUID):
-                        tilt_service = service
-                        print("[service uuid] ", tilt_service.uuid)
+                        if (service.uuid == self.SERVICE_TILT_UUID):
+                            tilt_service = service
+                            print("[service uuid] ", tilt_service.uuid)
 
-                        if (tilt_service != ""):
-                            for characteristic in tilt_service.characteristics:
+                            if (tilt_service != ""):
+                                for characteristic in tilt_service.characteristics:
 
-                                print("characteristics UUID: ", characteristic.uuid)
-                                if("notify" in characteristic.properties and characteristic.uuid == self.CHARACTERISTIC_TILT_UUID):
-                                    tilt_characteristics = characteristic
-                        print(tilt_ready)
-                        tilt_ready = 1
+                                    print("characteristics UUID: ", characteristic.uuid)
+                                    if("notify" in characteristic.properties and characteristic.uuid == self.CHARACTERISTIC_TILT_UUID):
+                                        tilt_characteristics = characteristic
+                            print(tilt_ready)
+                            tilt_ready = 1
 
-                if (steering_ready == 1 and tilt_ready == 1):
-                    print("all ready!")
+                    if (steering_ready == 1 and tilt_ready == 1):
+                        print("all ready!")
                         
 
             except exc.BleakError as e:
