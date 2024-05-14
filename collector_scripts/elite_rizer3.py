@@ -17,6 +17,9 @@ class UDP_Handler:
     def __init__(self):
         global tilt_value
         global tilt_received
+
+        tilt_value = 0
+        tilt_received = 0
         self.received_steering_data = 0  # Initialize with None or any default value
         self.udp_ip = "127.0.0.1" # Send the rizer data to the master_collector.py script via UDP over localhost
         self.udp_port = 2222
@@ -30,6 +33,8 @@ class UDP_Handler:
         self.steering_data = None
         steering_received = None
         while(True):
+            await asyncio.sleep(1)
+            print("udp main")
             if (steering_received == 1):                            #when steering value has chanched, send it to unity
                 await self.send_steering_data_udp(self.steering_data)
             try:
@@ -64,7 +69,7 @@ class UDP_Handler:
     def check_new_tilt(self, udp_tilt_value):
         global tilt_received
         global tilt_value
-        #print("RIZER tilt: ", udp_tilt_value)
+        print("RIZER tilt: ", udp_tilt_value)
         if tilt_value != udp_tilt_value:
             tilt_value = udp_tilt_value
             tilt_received = 1
@@ -89,30 +94,33 @@ class BLE_Handler:
     global steering_service
     global tilt_service
 
-    global current_tilt_value_on_razer
+    global current_tilt_value_on_razer                          # current position of RIZER (save ervery change for verification)
     
     async def read_and_ride_rizer(self):
         global tilt_received
-        global tilt_characteristics
         global client
         print("read and write")
         while(True):
-            await self.read_steering(self.steering_characteristics)
-            #self.read_steering(client, steering_characteristics)
-            print("read steering rizer")
-            if (tilt_received == 1):
-                await self.write_tilt(client)
-                tilt_received = 0
-                print("tilt writed")
-            print(self.tilt_characteristics)
+            if (self.init_ack == True):
+                await self.read_steering()
+                #self.read_steering(client, steering_characteristics)
+                print("read steering rizer")
+                if (tilt_received == 1):
+                    await self.write_tilt(client)
+                    tilt_received = 0
+                    print("tilt writed")
+            else:
+                print("wait init ack")
 
 
-    async def read_steering(self, characteristic):
+    async def read_steering(self):
+        await asyncio.sleep(1)
         print("read steering")
         try:
-            await client.start_notify(characteristic, self.notify_steering_callback)
-            await asyncio.sleep(10) # keeps the connection open for 10 seconds
-            await client.stop_notify(characteristic.uuid)                                  
+            print("should reading...")
+            await client.start_notify(self.steering_characteristics, self.notify_steering_callback())
+            await asyncio.sleep(1) # keeps the connection open for 10 seconds
+            await client.stop_notify(self.steering_characteristics.uuid)                                  
         except Exception as e:
             print("Error: ", e)                    
 
@@ -126,8 +134,9 @@ class BLE_Handler:
         except Exception as e:
             print("Error: ", e) 
 
-    async def notify_steering_callback(self, sender, data):
-        data = bytearray(data)
+    def notify_steering_callback(self):
+        print("notify steering")
+        data = bytearray(123)
         steering = 0.0
         
         if data[3] == 65:
@@ -161,14 +170,15 @@ class BLE_Handler:
         self.tilt_received = 0
         self.steering_characteristics = None
         self.tilt_characteristics = 0
+        self.init_ack = False
 
     async def async_init(self):
+        global client
         global client_is_connected
         print("start async init")
-        while(client_is_connected == False):
+        while not client_is_connected:
             try:
                 client = BleakClient(self.DEVICE_UUID, timeout=90)
-                #with BleakClient(self.DEVICE_UUID, timeout=90) as client:
                 await client.connect()
                 client_is_connected = True
                 print("Client connected to ", self.DEVICE_UUID)
@@ -203,10 +213,7 @@ class BLE_Handler:
 
                 if (self.steering_ready == 1 and self.tilt_ready == 1):
                     print("all ready!")
-                    
-            #finally:
-                #await client.disconnect
-                #print("disconnect")
+                    self.init_ack = True
 
             except exc.BleakError as e:
                 print(f"Failed to connect/discover services of {self.DEVICE_UUID}: {e}")
@@ -216,11 +223,12 @@ class BLE_Handler:
 async def main():
     ble_async_init_task = asyncio.create_task(ble.async_init())
     await ble_async_init_task
+
     ble_handler_task = asyncio.create_task(ble.read_and_ride_rizer())
     print("ble main started")
     udp_handler_task = asyncio.create_task(udp.main())
     print("udp main start")
-    await ble_handler_task()
+    await ble_handler_task
     await udp_handler_task
 
 # Creating instances of handlers
