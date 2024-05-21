@@ -8,7 +8,7 @@ Scenario 1: Easy ride in the city
 * Cars keep their distance
 * Cars don’t drive too fast
 * Intersection with a red light that the cyclist crosses straight 
-* Right turn with a Stop sign, no traffic lights
+* Stop sign at intersection with traffic lights
 * During the day
 * Covers 17 Use Case Actions
 
@@ -23,18 +23,19 @@ Scenario 2: Difficult ride in the city
 * Fast traffic and close cars passes
 * High traffic density
 * Left turn incl. turning lane and traffic light
-* Right turn without a traffic light and „Vorfahrt gewähren“ sign
+* Intersection without traffic lights and „Vorfahrt gewähren“ sign
+* Zebrastreifen (Pedestrian crossing)
 * Sun sets
 * Covers 17 Use Case Actions
 
 Scenario 3: Dangerous ride in the city
 * Bad weather: rain and wet roads
 * Obstacles on the ground, narrow points
-* Nighttime
+* Nighttime with lantern lights
 * Slow cyclists
 * Cars drive fast and way too close
 * Bad parking
-* There is a „Vorfahrt“ intersection, but the car takes the right of way
+* There is a „Vorfahrt“ intersection
 * Covers 14 Use Case Actions
 
 Scenario 4: Fun adventure ride in the forest
