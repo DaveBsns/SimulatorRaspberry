@@ -5,9 +5,9 @@ import time
 from master_collector import DataReceiver
 
 #global variables
-tilt_received = 0                           #received tilt data form UDP. Ready to send over BLE
+incline_received = 0                           #received tilt data form UDP. Ready to send over BLE
 steering_received = 0                       #received steering data from RIZER. Ready to send over UDP
-tilt_value = None
+incline_value = None
 current_tilt_value_on_razer = None          #received tilt data form UDP. Ready to send over BLE
 client = None
 
@@ -15,11 +15,11 @@ client = None
 class UDP_Handler:
 
     def __init__(self):
-        global tilt_value
-        global tilt_received
+        global incline_value
+        global incline_received
 
-        tilt_value = 0
-        tilt_received = 0
+        incline_value = 0
+        incline_received = 0
         self.received_steering_data = 0  # Initialize with None or any default value
         self.udp_ip = "127.0.0.1" # Send the rizer data to the master_collector.py script via UDP over localhost
         self.udp_port = 2222
@@ -27,7 +27,7 @@ class UDP_Handler:
             
 
     async def main(self):
-        global tilt_value
+        global incline_value
         global steering_received
         receiver = DataReceiver()
         self.steering_data = None
@@ -39,17 +39,18 @@ class UDP_Handler:
                 await self.send_steering_data_udp(self.steering_data)
             try:
                 #self.listening_udp                 maybe not needed
-                tilt_value = receiver.get_tilt()                    #read tilt from unity
-                self.check_new_tilt(tilt_value)                     #check if tilt value has changed or is still the same
+                incline_value = receiver.get_incline()                    #read tilt from unity
+                print(incline_value)
+                self.check_new_incline(incline_value)                     #check if tilt value has changed or is still the same
 
             except Exception as e:
                 print("Error: ", e)
     
-    def set_tilt_received(received):
-        tilt_received = received
+    def set_incline_received(self, received):
+        self.incline_received = received
     
-    def get_til_received():
-        return tilt_received
+    def get_incline_received(self):
+        return self.incline_received
 
     #send steering data over udp
     def send_steering_data_udp(self, steering_data):
@@ -60,19 +61,19 @@ class UDP_Handler:
             udp_socket.sendto(str(steering_data).encode(), (self.udp_ip, self.udp_port))
 
     def listening_udp(self):
-        udp_tilt_data = 0
+        udp_incline_data = 0
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
-            udp_socket.listen(str(udp_tilt_data).encode(), (self.udp_ip, self.udp_port))
-            print("Hello: ", udp_tilt_data)
+            udp_socket.listen(str(udp_incline_data).encode(), (self.udp_ip, self.udp_port))
+            print("Hello: ", udp_incline_data)
     
     # check if the value of the tilt in unity is the same as on the rizer (currently not possible to check the value. just to store the changes)
-    def check_new_tilt(self, udp_tilt_value):
-        global tilt_received
-        global tilt_value
-        print("RIZER tilt: ", udp_tilt_value)
-        if tilt_value != udp_tilt_value:
-            tilt_value = udp_tilt_value
-            tilt_received = 1
+    def check_new_incline(self, udp_incline_value):
+        global incline_received
+        global incline_value
+        print("RIZER incline: ", udp_incline_value)
+        if incline_value != udp_incline_value:
+            incline_value = udp_incline_value
+            incline_received = 1
 
 class BLE_Handler:
     #BLE constant
@@ -80,13 +81,13 @@ class BLE_Handler:
     DEVICE_UUID = "fc:12:65:28:cb:44"
 
     SERVICE_STEERING_UUID = "347b0001-7635-408b-8918-8ff3949ce592"           # Rizer - read steering
-    SERVICE_TILT_UUID = "347b0001-7635-408b-8918-8ff3949ce592"
+    SERVICE_INCLINE_UUID = "347b0001-7635-408b-8918-8ff3949ce592"
 
-    INCREASE_TILT_HEX = "060102"
+    INCREASE_INCLINE_HEX = "060102"
     DECREASE_TILT_HEX = "060402"
 
     CHARACTERISTICS_STEERING_UUID = "347b0030-7635-408b-8918-8ff3949ce592"   # Rizer - read steering
-    CHARACTERISTIC_TILT_UUID = "347b0020-7635-408b-8918-8ff3949ce592"       # write tilt
+    CHARACTERISTIC_INCLINE_UUID = "347b0020-7635-408b-8918-8ff3949ce592"       # write tilt
 
     global steering_characteristics
     global tilt_characteristics
@@ -97,7 +98,7 @@ class BLE_Handler:
     global current_tilt_value_on_razer                          # current position of RIZER (save ervery change for verification)
     
     async def read_and_ride_rizer(self):
-        global tilt_received
+        global incline_received
         global client
         print("read and write")
         while(True):
@@ -105,9 +106,9 @@ class BLE_Handler:
                 await self.read_steering()
                 #self.read_steering(client, steering_characteristics)
                 print("read steering rizer")
-                if (tilt_received == 1):
-                    await self.write_tilt(client)
-                    tilt_received = 0
+                if (incline_received == 1):
+                    await self.write_incline(client)
+                    incline_received = 0
                     print("tilt writed")
             else:
                 print("wait init ack")
@@ -128,13 +129,13 @@ class BLE_Handler:
         except Exception as e:
             print("Error: ", e)                    
 
-    async def write_tilt(self):
+    async def write_incline(self):
         global client
-        global tilt_received
+        global incline_received
         try:
-            await client.write_gatt_char(self.CHARACTERISTIC_TILT_UUID, bytes.fromhex(self.INCREASE_TILT_HEX), response=True)
+            await client.write_gatt_char(self.CHARACTERISTIC_INCLINE_UUID, bytes.fromhex(self.INCREASE_INCLINE_HEX), response=True)
             current_tilt_value_on_razer += 0.5
-            tilt_received = 0
+            incline_received = 0
         except Exception as e:
             print("Error: ", e) 
 
@@ -169,10 +170,10 @@ class BLE_Handler:
         print("Connecting to BLE Device")
         client_is_connected = False
         self.steering_ready = 0
-        self.tilt_ready = 0
+        self.incline_ready = 0
         self.tilt_received = 0
         self.steering_characteristics = None
-        self.tilt_characteristics = 0
+        self.incline_characteristics = 0
         self.init_ack = False
 
     async def async_init(self):
@@ -203,19 +204,19 @@ class BLE_Handler:
                         print(self.steering_ready)
                         self.steering_ready = 1 
 
-                    if (service.uuid == self.SERVICE_TILT_UUID):
-                        self.tilt_service = service
-                        print("[service uuid] ", self.tilt_service.uuid)
+                    if (service.uuid == self.SERVICE_INCLINE_UUID):
+                        self.incline_service = service
+                        print("[service uuid] ", self.incline_service.uuid)
 
-                        if (self.tilt_service != ""):
-                            for characteristic in self.tilt_service.characteristics:
+                        if (self.incline_service != ""):
+                            for characteristic in self.incline_service.characteristics:
 
                                 print("characteristics UUID: ", characteristic.uuid)
-                                if("notify" in characteristic.properties and characteristic.uuid == self.CHARACTERISTIC_TILT_UUID):
-                                    self.tilt_characteristics = characteristic
-                        self.tilt_ready = 1
+                                if("notify" in characteristic.properties and characteristic.uuid == self.CHARACTERISTIC_INCLINE_UUID):
+                                    self.incline_characteristics = characteristic
+                        self.incline_ready = 1
 
-                if (self.steering_ready == 1 and self.tilt_ready == 1):
+                if (self.steering_ready == 1 and self.incline_ready == 1):
                     print("all ready!")
                     self.init_ack = True
 
