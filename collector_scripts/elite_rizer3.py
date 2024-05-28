@@ -119,13 +119,11 @@ class BLE_Handler:
         await asyncio.sleep(1)
         print("read steering")
         try:
-            print("should reading...")
-            await client.start_notify(self.steering_characteristics, self.notify_steering_callback(sender, data))
+            await client.start_notify(self.steering_characteristics, self.notify_steering_callback)
             # Access the notification data using data argument
-            print(f"Steering data: {sender}")
-            print(f"Steering data: {data}")
+            #print(f"Steering data: {sender}")
+            #print(f"Steering data: {data}")
             await asyncio.sleep(1) # keeps the connection open for 10 seconds
-            print("test here")
             await client.stop_notify(self.steering_characteristics.uuid)                                  
         except Exception as e:
             print("Error: ", e)                    
@@ -140,11 +138,10 @@ class BLE_Handler:
         except Exception as e:
             print("Error: ", e) 
 
-    def notify_steering_callback(data):
+    async def notify_steering_callback(self, sender, data):
         print("notify steering")
         data = bytearray(data)
         steering = 0.0
-        
         if data[3] == 65:
             steering = 1.0
         elif data[3] == 193:
@@ -185,6 +182,7 @@ class BLE_Handler:
         while not client_is_connected:
             try:
                 client = BleakClient(self.DEVICE_UUID, timeout=90)
+                print("try to connect")
                 await client.connect()
                 client_is_connected = True
                 print("Client connected to ", self.DEVICE_UUID)
