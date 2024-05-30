@@ -27,3 +27,19 @@ Monday, 6th of May 2024:
 - agreement on parking garage as the next test area for incline
 - agreement on slight adaption of the scenarios 2,3 and 4
 - discussion on whether we will write a paper or a non-scientific documentation
+
+
+Thu, 30 May 2024
+
+Current State Overview
+- Scenario 1: Complete and functional.
+- Scenario 1b: Implementation on Unity side is complete; testing on the simulator is pending.
+- Scenario 2 & 3 Concepts: Conceptualization is complete.
+- Scenario 3: Philipp has begun implementation in Unity.
+- Scenario 2: Pooja has begun implementation in Unity.
+
+Goal for End of Semester
+- Scenario 1: Ensure it is fully functional, including Scenario 1b to demonstrate a working Rizer.
+- Scenario 2: Complete implementation, excluding weather conditions.
+- Scenario 3: Complete implementation, excluding weather conditions and limited to basic physics for slow bicyclists.
+- Documentation: Prepare and possibly finalize a paper or documentation of the project.
