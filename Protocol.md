@@ -43,3 +43,16 @@ Goal for End of Semester
 - Scenario 2: Complete implementation, excluding weather conditions.
 - Scenario 3: Complete implementation, excluding weather conditions and limited to basic physics for slow bicyclists.
 - Documentation: Prepare and possibly finalize a paper or documentation of the project.
+
+Thu, 6 June 2024: 
+
+Current State Overview:
+- Scenario 1: Complete & functional
+- Scenario 1b: Work in Progress: Demonstraiting Incline (ajust Rizer)
+- Scenario 2: (no new update because pooja could not attend meeting)
+- Scenario 3: Scenario in Unity created with assets (wip: way point bike controller & missing: car takes the right of way)
+
+Goal for End of Semester: 
+- same goals as from 30 May 2024
+- additional adjust the durito for incline demonstation
+- Documentation: Write documentation of the project (not paper) until 26.7. 
