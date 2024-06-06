@@ -10,6 +10,7 @@ class DataSender:
         self.brake_value = 0
         self.bno_value = 0
         self.roll_value = 0
+        self.incline_value = 0
         self.udp_unity_send_ip = "127.0.0.2" # IP of the computer running Unity (just the localhost ip if the script is running on the same computer than the simulation)
         # self.udp_unity_send_ip = "10.30.77.221" # IP of the computer running Unity
         self.udp_unity_send_port = 1337
@@ -89,6 +90,7 @@ class DataReceiver:
             ble_fan_value = unity_values["bleFan"]
             ble_incline_value = unity_values["bleIncline"]
             # print("ble fan from unity: ", ble_fan_value)
+            print("incline from unity: ", ble_incline_value)
             self.ble_fan_speed = ble_fan_value
             self.ble_incline = ble_incline_value                      #maybe ble_xx_value is not nessesary and we can use the self.ble_xx directly
         except Exception as e:

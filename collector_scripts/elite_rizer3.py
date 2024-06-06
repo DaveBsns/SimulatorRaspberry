@@ -10,6 +10,8 @@ steering_received = 0                       #received steering data from RIZER. 
 incline_value = None
 current_tilt_value_on_razer = None          #received tilt data form UDP. Ready to send over BLE
 client = None
+asyncio_sleep = 3
+steering_ready_to_send = 0                     
 
 
 class UDP_Handler:
@@ -29,22 +31,28 @@ class UDP_Handler:
     async def main(self):
         global incline_value
         global steering_received
+        global asyncio_sleep
         receiver = DataReceiver()
         self.steering_data = None
         steering_received = None
+        receiver.open_udp_socket()
+        await receiver.start_udp_listener()
         while(True):
-            await asyncio.sleep(1)
+            await asyncio.sleep(asyncio_sleep)
             print("udp main")
-            if (steering_received == 1):                            #when steering value has chanched, send it to unity
+            if (steering_received == 1):                                  #when steering value has chanched, send it to unity
                 await self.send_steering_data_udp(self.steering_data)
             try:
-                #self.listening_udp                 maybe not needed
+
                 incline_value = receiver.get_incline()                    #read tilt from unity
-                print(incline_value)
+                print("incline from UDP (b c): ", incline_value)
                 self.check_new_incline(incline_value)                     #check if tilt value has changed or is still the same
 
             except Exception as e:
                 print("Error: ", e)
+
+            print("udp loop finish")
+
     
     def set_incline_received(self, received):
         self.incline_received = received
@@ -55,7 +63,7 @@ class UDP_Handler:
     #send steering data over udp
     def send_steering_data_udp(self, steering_data):
         # Create a UDP socket
-        print(steering_data)
+        #print("send steering data: ", steering_data)
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
             # Send speed_data
             udp_socket.sendto(str(steering_data).encode(), (self.udp_ip, self.udp_port))
@@ -87,7 +95,7 @@ class BLE_Handler:
     DECREASE_TILT_HEX = "060402"
 
     CHARACTERISTICS_STEERING_UUID = "347b0030-7635-408b-8918-8ff3949ce592"   # Rizer - read steering
-    CHARACTERISTIC_INCLINE_UUID = "347b0020-7635-408b-8918-8ff3949ce592"       # write tilt
+    CHARACTERISTIC_INCLINE_UUID = "347b0020-7635-408b-8918-8ff3949ce592"     # write tilt
 
     global steering_characteristics
     global tilt_characteristics
@@ -96,62 +104,6 @@ class BLE_Handler:
     global tilt_service
 
     global current_tilt_value_on_razer                          # current position of RIZER (save ervery change for verification)
-    
-    async def read_and_ride_rizer(self):
-        global incline_received
-        global client
-        print("read and write")
-        while(True):
-            if (self.init_ack == True):
-                await self.read_steering()
-                #self.read_steering(client, steering_characteristics)
-                print("read steering rizer")
-                if (incline_received == 1):
-                    await self.write_incline(client)
-                    incline_received = 0
-                    print("tilt writed")
-            else:
-                print("wait init ack")
-
-
-    async def read_steering(self):
-        data = bytearray(8)
-        sender = 0
-        await asyncio.sleep(1)
-        print("read steering")
-        try:
-            await client.start_notify(self.steering_characteristics, self.notify_steering_callback)
-            # Access the notification data using data argument
-            #print(f"Steering data: {sender}")
-            #print(f"Steering data: {data}")
-            await asyncio.sleep(1) # keeps the connection open for 10 seconds
-            await client.stop_notify(self.steering_characteristics.uuid)                                  
-        except Exception as e:
-            print("Error: ", e)                    
-
-    async def write_incline(self):
-        global client
-        global incline_received
-        try:
-            await client.write_gatt_char(self.CHARACTERISTIC_INCLINE_UUID, bytes.fromhex(self.INCREASE_INCLINE_HEX), response=True)
-            current_tilt_value_on_razer += 0.5
-            incline_received = 0
-        except Exception as e:
-            print("Error: ", e) 
-
-    async def notify_steering_callback(self, sender, data):
-        print("notify steering")
-        data = bytearray(data)
-        steering = 0.0
-        if data[3] == 65:
-            steering = 1.0
-        elif data[3] == 193:
-            steering = -1.0
-        
-        self.received_steering_data = steering
-        print(self.received_steering_data)
-        udp.send_steering_data_udp(self.received_steering_data)
-
 
     def __init__(self):
         global steering_characteristics
@@ -175,6 +127,60 @@ class BLE_Handler:
         self.steering_characteristics = None
         self.incline_characteristics = 0
         self.init_ack = False
+    
+    #main function for BLE Handler
+    async def read_and_ride_rizer(self):
+        global incline_received
+        global client
+        print("read and write")
+        while(True):
+            await asyncio.sleep(asyncio_sleep)
+            if (self.init_ack == True):
+                await self.read_steering()
+                #self.read_steering(client, steering_characteristics)
+                print("read steering rizer")
+                if (incline_received == 1):
+                    await self.write_incline(client)
+            else:
+                print("wait init ack")
+
+
+    async def read_steering(self):
+        data = bytearray(8)
+        sender = 0
+        await asyncio.sleep(asyncio_sleep)
+        try:
+            await client.start_notify(self.steering_characteristics, self.notify_steering_callback)
+            # Access the notification data using data argument
+            #print(f"Steering data: {sender}")
+            #print(f"Steering data: {data}")
+            await asyncio.sleep(0.5) # keeps the connection open for 10 seconds
+            await client.stop_notify(self.steering_characteristics.uuid)                                  
+        except Exception as e:
+            print("Error: ", e)                    
+
+    async def write_incline(self): #TODO + - inclne 
+        global client
+        global incline_received
+        try:
+            await client.write_gatt_char(self.CHARACTERISTIC_INCLINE_UUID, bytes.fromhex(self.INCREASE_INCLINE_HEX), response=True)
+            current_tilt_value_on_razer += 0.5
+            incline_received = 0
+            print("tilt writed")
+        except Exception as e:
+            print("Error: ", e) 
+
+    async def notify_steering_callback(self, sender, data):
+        data = bytearray(data)
+        steering = 0.0
+        if data[3] == 65:
+            steering = 1.0
+        elif data[3] == 193:
+            steering = -1.0
+        
+        self.received_steering_data = steering
+        print("readed steering: ", self.received_steering_data)
+        udp.send_steering_data_udp(self.received_steering_data)
 
     async def async_init(self):
         global client
@@ -199,9 +205,8 @@ class BLE_Handler:
                                 if("notify" in characteristic.properties and characteristic.uuid == self.CHARACTERISTICS_STEERING_UUID):
                                     self.steering_characteristics = characteristic
                                     # print("CHARACTERISTIC: ", CHARACTERISTIC_STEERING, characteristic.properties)
-                                print("IF")
 
-                        print(self.steering_ready)
+                        #print("steering ready", self.steering_ready)
                         self.steering_ready = 1 
 
                     if (service.uuid == self.SERVICE_INCLINE_UUID):
@@ -243,6 +248,4 @@ ble = BLE_Handler()
 # Call async_init right after the instance is created
 #asyncio.run(ble.async_init())
 
-
-print("asyncio start")
 asyncio.run(main())
