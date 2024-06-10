@@ -51,30 +51,51 @@ class DataSender:
 
 
 # This class might be to be located in the headwind script
-class DataReceiver:
+class DataReceiverSingleton:
+    _instance = None
+
     global ble_fan_speed
     global ble_incline
     global ble_resistance
 
-    def __init__(self):
-
-        # self.udp_unity_receive_ip = "127.0.0.1"
+            # self.udp_unity_receive_ip = "127.0.0.1"
         # self.udp_unity_receive_port = 12345
-        self.udp_unity_receive_socket = None
-        self.ble_fan_speed = 0
-        self.ble_incline = 0
-        self.ble_resistance = 0
+
+
+    @classmethod
+    def get_instance(cls):
+        if cls._instance == None:
+            cls._instance = cls.__new__(cls)
+            global udp_unity_receive_socket
+            global ble_fan_speed
+            global ble_incline
+            global ble_resistance
+
+            udp_unity_receive_socket = None
+            ble_fan_speed = 0
+            ble_incline = 0
+            ble_resistance = 0
+        return cls._instance
     
+    def log(self, ex: Exception):
+        print(ex)
+    
+    def log(self, message: str):
+        print(message)
+
+    def __init__(self):
+        raise RuntimeError("This is a Singleton, invoke get instance() instead.")
+        print("Master collector instance created")
     
     def get_fan_speed(self):
-        #global ble_fan_speed
-        print("Self ble fan speed: ", self.ble_fan_speed)
-        return self.ble_fan_speed
+        global ble_fan_speed
+        print("Self ble fan speed: ", ble_fan_speed)
+        return ble_fan_speed
 
     def get_incline(self):
-        #global ble_incline
-        print("Self ble incline: ", self.ble_incline)
-        return self.ble_incline
+        global ble_incline
+        print("Self ble incline: ", ble_incline)
+        return ble_incline
     
     def get_resistance(self):
         #global ble_resistance

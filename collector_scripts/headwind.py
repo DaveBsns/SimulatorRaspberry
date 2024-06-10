@@ -1,6 +1,6 @@
 import asyncio
 from bleak import BleakScanner, BleakClient, exc
-from dataReceiverSingleton import DataReceiverSingleton
+from master_collector import DataReceiverSingleton
 
 class BluetoothCallback():
     def __init__(self):
@@ -78,19 +78,20 @@ async def scan_and_connect_headwind():
                                 if(characteristic.uuid == characteristic_uuid):
                                     CHARACTERISTIC = characteristic
 
-                                    receiver = DataReceiverSingleton()
+                                    receiver = DataReceiverSingleton.get_instance()
+                                    print("rizer id: ", id(receiver))
                                     
                                     bluetooth_callback = BluetoothCallback()
-                                    receiver._receiver.open_udp_socket()
+                                    receiver._instance.open_udp_socket()
                                     while True:
                                         
                                         try:
                                             print("headwind: try")
-                                            receiver._receiver.start_udp_listener()
+                                            receiver._instance.start_udp_listener()
                                             # print("FAN SPEED: ", receiver.get_fan_speed())
-                                            speed_value = receiver._receiver.get_fan_speed()
-                                            print("incline: ", receiver._receiver.get_incline())
-                                            print("Fan Speed: ", receiver._receiver.get_fan_speed())
+                                            speed_value = receiver._instance.get_fan_speed()
+                                            print("incline: ", receiver._instance.get_incline())
+                                            print("Fan Speed: ", receiver._instance.get_fan_speed())
                                             print("Fan Speed: ", speed_value)
                                         except Exception as e:
                                             print("Error: ", e)

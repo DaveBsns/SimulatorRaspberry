@@ -2,7 +2,7 @@ import asyncio
 from bleak import BleakClient, exc
 import socket
 import time
-from dataReceiverSingleton import DataReceiverSingleton
+from master_collector import DataReceiverSingleton
 
 #global variables
 global incline_received                         #received tilt data form UDP. Ready to send over BLE
@@ -34,7 +34,9 @@ class UDP_Handler:
         global asyncio_sleep
         self.steering_data = None
         steering_received = None
-        receiver = DataReceiverSingleton()
+        receiver = DataReceiverSingleton.get_instance()
+        print("rizer id: ", id(receiver))
+        print("where id??")
         while(True):
             await asyncio.sleep(asyncio_sleep)
             print("udp main")
@@ -43,11 +45,11 @@ class UDP_Handler:
                 await self.send_steering_data_udp(self.steering_data)
             try:
                 #self.receiver._receiver.start_udp_listener()
-                print("datareceiver get incline", receiver._receiver.get_incline())
-                print("datareceiver get fan", receiver._receiver.get_fan_speed())
+                print("datareceiver get incline", receiver._instance.get_incline())
+                print("datareceiver get fan", receiver._instance.get_fan_speed())
 
                 #self.receiver._receiver.stop_udp_listener()
-                incline_value = receiver._receiver.get_incline()     #read tilt from unity
+                incline_value = receiver._instance.get_incline()     #read tilt from unity
                 #print("fan speed (b c)", self.receiver.get_fan_speed())
                 print("incline from UDP (b c): ", incline_value)
                 self.check_new_incline(incline_value)                     #check if tilt value has changed or is still the same
