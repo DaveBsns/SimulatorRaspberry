@@ -3,6 +3,7 @@ from bleak import BleakScanner, BleakClient, exc
 import struct
 import sys
 import socket
+from dataReceiverSingleton import DataReceiverSingleton 
 
 
 device_name = "DIRETO XR"  # Replace with the name of your desired BLE device

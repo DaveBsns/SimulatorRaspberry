@@ -1,8 +1,8 @@
 import asyncio
 from bleak import BleakScanner, BleakClient, exc
-from master_collector import DataReceiver
+from dataReceiverSingleton import DataReceiverSingleton
 
-class BluetoothCallback:
+class BluetoothCallback():
     def __init__(self):
         self.received_data = 0  # Initialize with None or any default value
 
@@ -78,16 +78,19 @@ async def scan_and_connect_headwind():
                                 if(characteristic.uuid == characteristic_uuid):
                                     CHARACTERISTIC = characteristic
 
-                                    receiver = DataReceiver()
+                                    receiver = DataReceiverSingleton()
+                                    
                                     bluetooth_callback = BluetoothCallback()
-                                    receiver.open_udp_socket()
+                                    receiver._receiver.open_udp_socket()
                                     while True:
                                         
                                         try:
-                                            receiver.start_udp_listener()
+                                            print("headwind: try")
+                                            receiver._receiver.start_udp_listener()
                                             # print("FAN SPEED: ", receiver.get_fan_speed())
-                                            speed_value = receiver.get_fan_speed()
-                                            print("incline: ", receiver.get_incline())
+                                            speed_value = receiver._receiver.get_fan_speed()
+                                            print("incline: ", receiver._receiver.get_incline())
+                                            print("Fan Speed: ", receiver._receiver.get_fan_speed())
                                             print("Fan Speed: ", speed_value)
                                         except Exception as e:
                                             print("Error: ", e)
@@ -136,4 +139,14 @@ async def scan_and_connect_headwind():
                 # Add additional error handling or logging as needed
                 # raise  
 
-asyncio.run(scan_and_connect_headwind())
+try:
+    asyncio.run(scan_and_connect_headwind())
+except BaseException:
+    import sys
+    print(sys.exc_info()[0])
+    import traceback
+    print(traceback.format_exc())
+finally:
+    print("Press Enter to continue ...")
+    input()
+

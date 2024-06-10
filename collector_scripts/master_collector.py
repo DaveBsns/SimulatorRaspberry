@@ -54,34 +54,32 @@ class DataSender:
 class DataReceiver:
     global ble_fan_speed
     global ble_incline
-    global resistance
+    global ble_resistance
 
     def __init__(self):
-        global ble_fan_speed
-        global ble_incline
-        global ble_resistance 
+
         # self.udp_unity_receive_ip = "127.0.0.1"
         # self.udp_unity_receive_port = 12345
         self.udp_unity_receive_socket = None
-        ble_fan_speed = 0
-        ble_incline = 0
-        ble_resistance = 0
+        self.ble_fan_speed = 0
+        self.ble_incline = 0
+        self.ble_resistance = 0
     
     
     def get_fan_speed(self):
-        global ble_fan_speed
-        print("Self ble fan speed: ", ble_fan_speed)
-        return ble_fan_speed
+        #global ble_fan_speed
+        print("Self ble fan speed: ", self.ble_fan_speed)
+        return self.ble_fan_speed
 
     def get_incline(self):
-        global ble_incline
-        print("Self ble incline: ", ble_incline)
-        return ble_incline
+        #global ble_incline
+        print("Self ble incline: ", self.ble_incline)
+        return self.ble_incline
     
     def get_resistance(self):
-        global ble_resistance
-        print("Self ble incline: ", ble_resistance)
-        return ble_resistance
+        #global ble_resistance
+        print("Self ble incline: ", self.ble_resistance)
+        return self.ble_resistance
     
     def open_udp_socket(self):
         # Create a UDP socket
@@ -94,19 +92,22 @@ class DataReceiver:
         print("Listening for UDP data...")
 
     def start_udp_listener(self):
+
         # Infinite loop to continuously receive data
         try:
             data, addr = self.udp_unity_receive_socket.recvfrom(1024)  # Buffer size is 1024 bytes  
 
+            #self.udp_unity_receive_socket.setblocking(False)
+
             json_data = data.decode('utf-8')  # Decode bytes to string
             # value = json.loads(data.decode())
             unity_values = json.loads(json_data)
-            ble_fan_value = unity_values["bleFan"]
-            ble_incline_value = unity_values["bleIncline"]
+            self.ble_fan_value = unity_values["bleFan"]
+            self.ble_incline_value = unity_values["bleIncline"]
             # print("ble fan from unity: ", ble_fan_value)
-            print("incline from unity: ", ble_incline_value)
-            self.ble_fan_speed = ble_fan_value
-            self.ble_incline = ble_incline_value                      #maybe ble_xx_value is not nessesary and we can use the self.ble_xx directly
+            print("incline from unity: ", self.ble_incline_value)
+            self.ble_fan_speed = self.ble_fan_value
+            self.ble_incline = self.ble_incline_value                      #maybe ble_xx_value is not nessesary and we can use the self.ble_xx directly
         except Exception as e:
             print(f"Error while receiving UDP data: {e}")
 

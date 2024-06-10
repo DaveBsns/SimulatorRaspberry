@@ -2,7 +2,7 @@ import asyncio
 from bleak import BleakClient, exc
 import socket
 import time
-from master_collector import DataReceiver
+from dataReceiverSingleton import DataReceiverSingleton
 
 #global variables
 global incline_received                         #received tilt data form UDP. Ready to send over BLE
@@ -15,8 +15,6 @@ steering_ready_to_send = 0
 
 
 class UDP_Handler:
-    global incline_value
-    #global receiver
 
     def __init__(self):
         global incline_value
@@ -28,7 +26,6 @@ class UDP_Handler:
         self.udp_ip = "127.0.0.1" # Send the rizer data to the master_collector.py script via UDP over localhost
         self.udp_port = 2222
         print("udp handler started")
-        #self.receiver = DataReceiver()
             
 
     async def main(self):
@@ -37,6 +34,7 @@ class UDP_Handler:
         global asyncio_sleep
         self.steering_data = None
         steering_received = None
+        receiver = DataReceiverSingleton()
         while(True):
             await asyncio.sleep(asyncio_sleep)
             print("udp main")
@@ -44,9 +42,12 @@ class UDP_Handler:
                 print("send steering data")
                 await self.send_steering_data_udp(self.steering_data)
             try:
-                #self.listening_udp(self)
-                print("datareceiver get incline")
-                #incline_value = DataReceiver().get_incline()               #read tilt from unity
+                #self.receiver._receiver.start_udp_listener()
+                print("datareceiver get incline", receiver._receiver.get_incline())
+                print("datareceiver get fan", receiver._receiver.get_fan_speed())
+
+                #self.receiver._receiver.stop_udp_listener()
+                incline_value = receiver._receiver.get_incline()     #read tilt from unity
                 #print("fan speed (b c)", self.receiver.get_fan_speed())
                 print("incline from UDP (b c): ", incline_value)
                 self.check_new_incline(incline_value)                     #check if tilt value has changed or is still the same
@@ -84,9 +85,10 @@ class UDP_Handler:
     
     # check if the value of the tilt in unity is the same as on the rizer (currently not possible to check the value. just to store the changes)
     def check_new_incline(self, udp_incline_value):
+        global incline_value
         print("RIZER incline: ", udp_incline_value)
-        if self.incline_value != udp_incline_value:
-            self.incline_value = udp_incline_value
+        if incline_value != udp_incline_value:
+            incline_value = udp_incline_value
             self.incline_received = 1
 
 class BLE_Handler:
@@ -144,7 +146,6 @@ class BLE_Handler:
             print("udp handler sleep")
             if (self.init_ack == True):
                 await self.read_steering()
-                #self.read_steering(client, steering_characteristics)
                 print("read steering rizer")
                 if (incline_received == 1):
                     await self.write_incline(client)
