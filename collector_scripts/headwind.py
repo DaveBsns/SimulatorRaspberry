@@ -87,6 +87,7 @@ async def scan_and_connect_headwind():
                                             receiver.start_udp_listener()
                                             # print("FAN SPEED: ", receiver.get_fan_speed())
                                             speed_value = receiver.get_fan_speed()
+                                            print("incline: ", receiver.get_incline())
                                             print("Fan Speed: ", speed_value)
                                         except Exception as e:
                                             print("Error: ", e)

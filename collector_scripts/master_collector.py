@@ -10,7 +10,6 @@ class DataSender:
         self.brake_value = 0
         self.bno_value = 0
         self.roll_value = 0
-        self.incline_value = 0
         self.udp_unity_send_ip = "127.0.0.2" # IP of the computer running Unity (just the localhost ip if the script is running on the same computer than the simulation)
         # self.udp_unity_send_ip = "10.30.77.221" # IP of the computer running Unity
         self.udp_unity_send_port = 1337
@@ -53,21 +52,36 @@ class DataSender:
 
 # This class might be to be located in the headwind script
 class DataReceiver:
+    global ble_fan_speed
+    global ble_incline
+    global resistance
+
     def __init__(self):
+        global ble_fan_speed
+        global ble_incline
+        global ble_resistance 
         # self.udp_unity_receive_ip = "127.0.0.1"
         # self.udp_unity_receive_port = 12345
         self.udp_unity_receive_socket = None
-        self.ble_fan_speed = 0
-        self.ble_incline = 0
+        ble_fan_speed = 0
+        ble_incline = 0
+        ble_resistance = 0
     
     
     def get_fan_speed(self):
-        print("Self ble fan speed: ", self.ble_fan_speed)
-        return self.ble_fan_speed
+        global ble_fan_speed
+        print("Self ble fan speed: ", ble_fan_speed)
+        return ble_fan_speed
 
     def get_incline(self):
-        print("Self ble incline: ", self.ble_incline)
-        return self.ble_incline
+        global ble_incline
+        print("Self ble incline: ", ble_incline)
+        return ble_incline
+    
+    def get_resistance(self):
+        global ble_resistance
+        print("Self ble incline: ", ble_resistance)
+        return ble_resistance
     
     def open_udp_socket(self):
         # Create a UDP socket
