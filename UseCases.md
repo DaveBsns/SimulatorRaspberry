@@ -1,7 +1,7 @@
 # Use Cases Bicycle Simulator
 
 ## Use Case Overview
-R1 - Removing Barries and building security
+R1 - Removing Barriers and building security
 
 R2 - Expansion of driving practice (mainly on intersections)
 
