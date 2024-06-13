@@ -55,4 +55,23 @@ Current State Overview:
 Goal for End of Semester (27.6): 
 - same goals as from 30 May 2024
 - additional adjust the durito for incline demonstation
-- Documentation: Write documentation of the project (not paper) until 5.7, latest 26.7. 
+- Documentation: Write documentation of the project (not paper) until 5.7, latest 26.7.
+
+Thu, 13 June 2024:
+  
+  Scenario 2: Work in Progress
+  
+  Scenario 3:
+    - Done: WayPointBike slow self driving on bike lane
+    - Work in Progress: Cars taking right of way
+  
+  Rizer: 
+    - issue: DataReceiver has inconsistent values in calls variables.
+  
+  Documentaion:
+    - inital draft of Structure missing additional Chapter of Project Structure (For others to know how to work on project in the future)
+    
+  Presentation: 
+    - Goal 15 minutes (max 20 with demonstration)
+    - Marc will create inital draft of presentation until next week
+    
