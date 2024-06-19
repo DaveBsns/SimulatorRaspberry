@@ -2,13 +2,13 @@ import asyncio
 from bleak import BleakClient, exc
 import socket
 import time
-from master_collector import DataReceiverSingleton
+from master_collector import DataReceiver
 
 #global variables
 global incline_received                         #received tilt data form UDP. Ready to send over BLE
 global steering_received                        #received steering data from RIZER. Ready to send over UDP
 global incline_value
-current_tilt_value_on_razer = None              #received tilt data form UDP. Ready to send over BLE
+global current_tilt_value_on_razer              # current incline from RAZER to compute 0.5 steps fo reach desired incline
 client = None
 asyncio_sleep = 3
 steering_ready_to_send = 0                     
@@ -19,12 +19,16 @@ class UDP_Handler:
     def __init__(self):
         global incline_value
         global incline_received
+        global isRunningBT
+        global isRunningUDP
 
         incline_value = 0
         incline_received = 0
-        self.received_steering_data = 0  # Initialize with None or any default value
-        self.udp_ip = "127.0.0.1" # Send the rizer data to the master_collector.py script via UDP over localhost
+        self.received_steering_data = 0                      # Initialize with None or any default value
+        self.udp_ip_to_master_collector = "127.0.0.1"        # Send the rizer data to the master_collector.py script via UDP over localhost
+        self.udp_ip_from_master_collector = "127.0.0.3"
         self.udp_port = 2222
+        self.receive_from_collector_port = 2223
         print("udp handler started")
             
 
@@ -32,32 +36,33 @@ class UDP_Handler:
         global incline_value
         global steering_received
         global asyncio_sleep
+        global isRunningUDP
+        global isRunningBT
+
+        isRunningUDP = True
         self.steering_data = None
         steering_received = None
-        receiver = DataReceiverSingleton.get_instance()
-        print("rizer id: ", id(receiver))
-        print("where id??")
+        #print("rizer id: ", id(receiver))
         while(True):
             await asyncio.sleep(asyncio_sleep)
             print("udp main")
+            print("start listener")
+            self.receive_incline_data_udp()
             if (steering_received == 1):                                  #when steering value has chanched, send it to unity
                 print("send steering data")
                 await self.send_steering_data_udp(self.steering_data)
             try:
-                #self.receiver._receiver.start_udp_listener()
-                print("datareceiver get incline", receiver._instance.get_incline())
-                print("datareceiver get fan", receiver._instance.get_fan_speed())
-
                 #self.receiver._receiver.stop_udp_listener()
-                incline_value = receiver._instance.get_incline()     #read tilt from unity
                 #print("fan speed (b c)", self.receiver.get_fan_speed())
                 print("incline from UDP (b c): ", incline_value)
-                self.check_new_incline(incline_value)                     #check if tilt value has changed or is still the same
+                #self.check_new_incline(incline_value)                     #check if tilt value has changed or is still the same
 
             except Exception as e:
                 print("Error: ", e)
 
             print("udp loop finish")
+            isRunningUDP = False
+            isRunningBT = True
 
  #   async def udp_handler_listen(self):
  #       print("open udp socket")
@@ -77,21 +82,27 @@ class UDP_Handler:
         #print("send steering data: ", steering_data)
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
             # Send speed_data
-            udp_socket.sendto(str(steering_data).encode(), (self.udp_ip, self.udp_port))
+            udp_socket.sendto(str(steering_data).encode(), (self.udp_ip_to_master_collector, self.udp_port))
 
-    def listening_udp(self):
+    def receive_incline_data_udp(self):
         udp_incline_data = 0
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
-            udp_socket.listen(str(udp_incline_data).encode(), (self.udp_ip, self.udp_port))
+            udp_socket.listen(str(udp_incline_data).encode(), (self.udp_ip_to_master_collector, self.receive_from_collector_port))
             print("Hello: ", udp_incline_data)
+    # def listening_udp(self):
+    #     udp_incline_data = 0
+    #     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
+    #         udp_socket.listen(str(udp_incline_data).encode(), (self.udp_ip, self.udp_port))
+    #         print("Hello: ", udp_incline_data)
     
     # check if the value of the tilt in unity is the same as on the rizer (currently not possible to check the value. just to store the changes)
     def check_new_incline(self, udp_incline_value):
         global incline_value
+        global incline_received
         print("RIZER incline: ", udp_incline_value)
         if incline_value != udp_incline_value:
             incline_value = udp_incline_value
-            self.incline_received = 1
+            incline_received = 1
 
 class BLE_Handler:
     #BLE constant
@@ -102,7 +113,7 @@ class BLE_Handler:
     SERVICE_INCLINE_UUID = "347b0001-7635-408b-8918-8ff3949ce592"
 
     INCREASE_INCLINE_HEX = "060102"
-    DECREASE_TILT_HEX = "060402"
+    DECREASE_INCLINE_HEX = "060402"
 
     CHARACTERISTICS_STEERING_UUID = "347b0030-7635-408b-8918-8ff3949ce592"   # Rizer - read steering
     CHARACTERISTIC_INCLINE_UUID = "347b0020-7635-408b-8918-8ff3949ce592"     # write tilt
@@ -113,6 +124,9 @@ class BLE_Handler:
     global steering_service
     global tilt_service
 
+    global isRunningUDP
+    global isRunningBT
+
     global current_tilt_value_on_razer                          # current position of RIZER (save ervery change for verification)
 
     def __init__(self):
@@ -121,6 +135,8 @@ class BLE_Handler:
 
         global steering_service
         global tilt_service
+
+        global current_tilt_value_on_razer
 
         #global steering_ready                   #connection to steering BLE service ready
         #global tilt_ready                       #connection to tilt BLE service ready
@@ -137,11 +153,15 @@ class BLE_Handler:
         self.steering_characteristics = None
         self.incline_characteristics = 0
         self.init_ack = False
+
+        current_tilt_value_on_razer = 0
     
     #main function for BLE Handler
     async def read_and_ride_rizer(self):
         global incline_received
         global client
+        global isRunningBT
+        global isRunningUDP
         print("read and write")
         while(True):
             await asyncio.sleep(asyncio_sleep)
@@ -150,9 +170,12 @@ class BLE_Handler:
                 await self.read_steering()
                 print("read steering rizer")
                 if (incline_received == 1):
-                    await self.write_incline(client)
+                    print("write incline")
+                    await self.write_incline(self)
             else:
                 print("wait init ack")
+            isRunningBT = False
+            isRunningUDP = True
 
 
     async def read_steering(self):
@@ -169,15 +192,32 @@ class BLE_Handler:
         except Exception as e:
             print("Error: ", e)                    
 
-    async def write_incline(self): #TODO + - inclne 
+    async def write_incline(self):
         global client
-        try:
-            await client.write_gatt_char(self.CHARACTERISTIC_INCLINE_UUID, bytes.fromhex(self.INCREASE_INCLINE_HEX), response=True)
-            current_tilt_value_on_razer += 0.5
-            self.incline_received = 0
-            print("tilt writed")
-        except Exception as e:
-            print("Error: ", e) 
+        global current_tilt_value_on_razer
+        global incline_value
+        incline_different = abs(current_tilt_value_on_razer, incline_value)        #absolute different of old and new incline value
+        print("incline_different", incline_different)
+
+        if(current_tilt_value_on_razer + incline_value > 0):
+            for x in range (incline_different):
+                try:
+                    await client.write_gatt_char(self.CHARACTERISTIC_INCLINE_UUID, bytes.fromhex(self.INCREASE_INCLINE_HEX), response=True)
+                    current_tilt_value_on_razer += 1
+                    self.incline_received = 0
+                    print("tilt writed")
+                except Exception as e:
+                    print("Error: ", e) 
+        else:
+             for x in range (incline_different):
+                try:
+                    await client.write_gatt_char(self.CHARACTERISTIC_INCLINE_UUID, bytes.fromhex(self.DECREASE_INCLINE_HEX), response=True)
+                    current_tilt_value_on_razer += -1
+                    self.incline_received = 0
+                    print("tilt writed, x ", x)
+                except Exception as e:
+                    print("Error: ", e) 
+
 
     async def notify_steering_callback(self, sender, data):
         data = bytearray(data)
@@ -242,13 +282,13 @@ async def main():
     ble_async_init_task = asyncio.create_task(ble.async_init())
     await ble_async_init_task
 
-    ble_handler_task = asyncio.create_task(ble.read_and_ride_rizer())
+    #ble_handler_task = asyncio.create_task(ble.read_and_ride_rizer())
     print("ble main started")
     udp_handler_task = asyncio.create_task(udp.main())
     print("udp main start")
 #    udp_listener_task = asyncio.create_task(udp.udp_handler_listen())
-    await ble_handler_task
-    await udp_handler_task
+    #await ble_handler_task
+    await udp_handler_task #TODO
  #   print("start udp listener")
  #   await udp_listener_task
 

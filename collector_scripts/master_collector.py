@@ -2,6 +2,7 @@ import asyncio
 import socket
 import select
 import json
+import time
 
 class DataSender:
     def __init__(self):
@@ -51,57 +52,48 @@ class DataSender:
 
 
 # This class might be to be located in the headwind script
-class DataReceiverSingleton:
-    _instance = None
-
-    global ble_fan_speed
-    global ble_incline
-    global ble_resistance
-
-            # self.udp_unity_receive_ip = "127.0.0.1"
-        # self.udp_unity_receive_port = 12345
-
-
-    @classmethod
-    def get_instance(cls):
-        if cls._instance == None:
-            cls._instance = cls.__new__(cls)
-            global udp_unity_receive_socket
-            global ble_fan_speed
-            global ble_incline
-            global ble_resistance
-
-            udp_unity_receive_socket = None
-            ble_fan_speed = 0
-            ble_incline = 0
-            ble_resistance = 0
-        return cls._instance
-    
-    def log(self, ex: Exception):
-        print(ex)
-    
-    def log(self, message: str):
-        print(message)
-
+class DataReceiver:
     def __init__(self):
-        raise RuntimeError("This is a Singleton, invoke get instance() instead.")
-        print("Master collector instance created")
-    
-    def get_fan_speed(self):
-        global ble_fan_speed
-        print("Self ble fan speed: ", ble_fan_speed)
-        return ble_fan_speed
+        self.ble_fan_speed = 0
+        self.ble_incline = 40
+        self.ble_resistance = 0
+        self.send_to_actuator_ip = "127.0.0.3"
+        self.send_to_rizer_port = 2223
+        self.send_to_headwind_port = 2224
+        self.udp_unity_receive_socket = None
+        self.main_loop()
 
+        # self.udp_unity_receive_ip = "127.0.0.1"
+        # self.udp_unity_receive_port = 12345
+    
+    def set_ble_fan_speed(self, fan_speed):
+        self.ble_fan_speed = fan_speed
+
+    def set_ble_incline(self, incline_data):
+        self.ble_incline = incline_data
+
+    def get_fan_speed(self):
+        #global ble_fan_speed
+        print("Self ble fan speed: ", self.ble_fan_speed)
+        return self.ble_fan_speed
+    
     def get_incline(self):
-        global ble_incline
-        print("Self ble incline: ", ble_incline)
-        return ble_incline
+        print("Self ble incline: ", self.ble_incline)
+        return self.ble_incline
     
     def get_resistance(self):
         #global ble_resistance
         print("Self ble incline: ", self.ble_resistance)
         return self.ble_resistance
-    
+
+    def main_loop(self):
+        print("start main loop master collector")
+        for x in range -20, 40:
+            self.send_udp_data_to_rizer(x)
+            time.sleep(2)
+            
+        
+
     def open_udp_socket(self):
         # Create a UDP socket
         udp_unity_receive_ip = "127.0.0.1"
@@ -116,6 +108,7 @@ class DataReceiverSingleton:
 
         # Infinite loop to continuously receive data
         try:
+            data_receiver = DataReceiver()
             data, addr = self.udp_unity_receive_socket.recvfrom(1024)  # Buffer size is 1024 bytes  
 
             #self.udp_unity_receive_socket.setblocking(False)
@@ -127,10 +120,44 @@ class DataReceiverSingleton:
             self.ble_incline_value = unity_values["bleIncline"]
             # print("ble fan from unity: ", ble_fan_value)
             print("incline from unity: ", self.ble_incline_value)
-            self.ble_fan_speed = self.ble_fan_value
-            self.ble_incline = self.ble_incline_value                      #maybe ble_xx_value is not nessesary and we can use the self.ble_xx directly
+            data_receiver.set_ble_fan_speed(self.ble_fan_value)
+            data_receiver.set_ble_incline(self.ble_incline_value)
+            print("incline mastercollector", data_receiver.get_incline())
+            #self.ble_incline = self.ble_incline_value                      #maybe ble_xx_value is not nessesary and we can use the self.ble_xx directly
         except Exception as e:
             print(f"Error while receiving UDP data: {e}")
+    
+    def send_udp_data_to_rizer(self, incline_data):
+        # Create a dictionary with the required parameters
+        data = {
+            "rizerIncline": float(incline_data),
+        }
+        print(data)
+        # Convert dictionary to JSON string
+        json_data = json.dumps(data)
+
+        # Create a UDP socket
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
+            # Send JSON data
+            udp_socket.sendto(json_data.encode(), (self.send_to_actuator_ip, self.send_to_rizer_port))
+
+
+    def send_udp_data_to_headwind(self, fan_speed):
+        
+
+        # Create a dictionary with the required parameters
+        data = {
+            "fanSpeed": float(fan_speed),
+        }
+        print(data)
+        # Convert dictionary to JSON string
+        json_data = json.dumps(data)
+
+        # Create a UDP socket
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
+            # Send JSON data
+            udp_socket.sendto(json_data.encode(), (self.send_to_actuator_ip, self.send_to_headwind_port))
+
 
     def stop_udp_listener(self):
         if self.udp_unity_receive_socket:

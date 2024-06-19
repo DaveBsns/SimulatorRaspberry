@@ -1,6 +1,6 @@
 import asyncio
 from bleak import BleakScanner, BleakClient, exc
-from master_collector import DataReceiverSingleton
+from master_collector import DataReceiver
 
 class BluetoothCallback():
     def __init__(self):
@@ -78,21 +78,22 @@ async def scan_and_connect_headwind():
                                 if(characteristic.uuid == characteristic_uuid):
                                     CHARACTERISTIC = characteristic
 
-                                    receiver = DataReceiverSingleton.get_instance()
-                                    print("rizer id: ", id(receiver))
+                                    #receiver = DataReceiver()
+                                    #print("rizer id: ", id(receiver))
                                     
                                     bluetooth_callback = BluetoothCallback()
-                                    receiver._instance.open_udp_socket()
+                                    #receiver.open_udp_socket()
                                     while True:
                                         
                                         try:
                                             print("headwind: try")
-                                            receiver._instance.start_udp_listener()
+                                            #receiver.start_udp_listener()
                                             # print("FAN SPEED: ", receiver.get_fan_speed())
-                                            speed_value = receiver._instance.get_fan_speed()
-                                            print("incline: ", receiver._instance.get_incline())
-                                            print("Fan Speed: ", receiver._instance.get_fan_speed())
+                                            speed_value = DataReceiver.ble_fan_speed
+                                            print("incline: ", DataReceiver.get_ble_incline())
+                                            print("Fan Speed: ", DataReceiver.get_ble_fan_speed())
                                             print("Fan Speed: ", speed_value)
+                                            print("get ble incline headwind", DataReceiver.get_ble_incline())
                                         except Exception as e:
                                             print("Error: ", e)
                                         try:
