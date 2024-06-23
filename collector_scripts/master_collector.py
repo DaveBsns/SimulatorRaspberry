@@ -57,9 +57,11 @@ class DataReceiver:
         self.ble_fan_speed = 0
         self.ble_incline = 40
         self.ble_resistance = 0
+        self.ble_resistance = 0
         self.send_to_actuator_ip = "127.0.0.3"
         self.send_to_rizer_port = 2223
         self.send_to_headwind_port = 2224
+        self.send_to_direto_port = 2225
         self.udp_unity_receive_socket = None
         self.main_loop()
 
@@ -93,7 +95,7 @@ class DataReceiver:
             time.sleep(2)
             
         
-
+    # UDP socket to receive data from Unity
     def open_udp_socket(self):
         # Create a UDP socket
         udp_unity_receive_ip = "127.0.0.1"
@@ -143,8 +145,6 @@ class DataReceiver:
 
 
     def send_udp_data_to_headwind(self, fan_speed):
-        
-
         # Create a dictionary with the required parameters
         data = {
             "fanSpeed": float(fan_speed),
@@ -157,6 +157,20 @@ class DataReceiver:
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
             # Send JSON data
             udp_socket.sendto(json_data.encode(), (self.send_to_actuator_ip, self.send_to_headwind_port))
+
+    def send_udp_data_to_direto(self, resistance_data):
+        # Create a dictionary with the required parameters
+        data = {
+            "fanSpeed": float(resistance_data),
+        }
+        print(data)
+        # Convert dictionary to JSON string
+        json_data = json.dumps(data)
+
+        # Create a UDP socket
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
+            # Send JSON data
+            udp_socket.sendto(json_data.encode(), (self.send_to_actuator_ip, self.send_to_direto_port))
 
 
     def stop_udp_listener(self):

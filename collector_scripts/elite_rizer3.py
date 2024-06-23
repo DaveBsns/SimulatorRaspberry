@@ -67,8 +67,7 @@ class UDP_Handler:
  #   async def udp_handler_listen(self):
  #       print("open udp socket")
  #       self.receiver.open_udp_socket()
-        
-
+    
     
     def set_incline_received(self, received):
         self.incline_received = received
@@ -89,11 +88,8 @@ class UDP_Handler:
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
             udp_socket.listen(str(udp_incline_data).encode(), (self.udp_ip_to_master_collector, self.receive_from_collector_port))
             print("Hello: ", udp_incline_data)
-    # def listening_udp(self):
-    #     udp_incline_data = 0
-    #     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
-    #         udp_socket.listen(str(udp_incline_data).encode(), (self.udp_ip, self.udp_port))
-    #         print("Hello: ", udp_incline_data)
+            self.incline_value = udp_incline_data
+
     
     # check if the value of the tilt in unity is the same as on the rizer (currently not possible to check the value. just to store the changes)
     def check_new_incline(self, udp_incline_value):
