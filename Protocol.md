@@ -43,3 +43,35 @@ Goal for End of Semester
 - Scenario 2: Complete implementation, excluding weather conditions.
 - Scenario 3: Complete implementation, excluding weather conditions and limited to basic physics for slow bicyclists.
 - Documentation: Prepare and possibly finalize a paper or documentation of the project.
+
+Thu, 6 June 2024: 
+
+Current State Overview:
+- Scenario 1: Complete & functional
+- Scenario 1b: Work in Progress: Demonstraiting Incline (ajust Rizer)
+- Scenario 2: (no new update because pooja could not attend meeting)
+- Scenario 3: Scenario in Unity created with assets (wip: way point bike controller & missing: car takes the right of way)
+
+Goal for End of Semester (27.6): 
+- same goals as from 30 May 2024
+- additional adjust the durito for incline demonstation
+- Documentation: Write documentation of the project (not paper) until 5.7, latest 26.7.
+
+Thu, 13 June 2024:
+  
+  Scenario 2: Work in Progress
+  
+  Scenario 3:
+    - Done: WayPointBike slow self driving on bike lane
+    - Work in Progress: Cars taking right of way
+  
+  Rizer: 
+    - issue: DataReceiver has inconsistent values in calls variables.
+  
+  Documentaion:
+    - inital draft of Structure missing additional Chapter of Project Structure (For others to know how to work on project in the future)
+    
+  Presentation: 
+    - Goal 15 minutes (max 20 with demonstration)
+    - Marc will create inital draft of presentation until next week
+    
