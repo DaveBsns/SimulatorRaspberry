@@ -10,6 +10,10 @@
 ## Control the docker container
 ```docker exec -it raspi-container /bin/bash```
 
+## Start all scripts
+```cd collector_scripts```
+```./run_scripts.bat```
+
 ## Enable bleak logging on Linux
 Insert this command into the same console where you want to start the bleak script after to set the BLEAK_LOGGING environment variable.
 ```export BLEAK_LOGGING=1```
