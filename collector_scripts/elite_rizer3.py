@@ -42,27 +42,35 @@ class UDP_Handler:
         isRunningUDP = True
         self.steering_data = None
         steering_received = None
+        udp_incline_data = 0
         #print("rizer id: ", id(receiver))
-        while(True):
-            await asyncio.sleep(asyncio_sleep)
-            print("udp main")
-            print("start listener")
-            self.receive_incline_data_udp()
-            if (steering_received == 1):                                  #when steering value has chanched, send it to unity
-                print("send steering data")
-                await self.send_steering_data_udp(self.steering_data)
-            try:
-                #self.receiver._receiver.stop_udp_listener()
-                #print("fan speed (b c)", self.receiver.get_fan_speed())
-                print("incline from UDP (b c): ", incline_value)
-                #self.check_new_incline(incline_value)                     #check if tilt value has changed or is still the same
+        # Set up the UDP socket
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
+            udp_socket.bind((self.udp_ip_from_master_collector, self.receive_from_collector_port))
+            while(True):
+                await asyncio.sleep(asyncio_sleep)
+                print("udp main")
+                print("start listener")
+                # Receive data from the socket
+                udp_incline_data, addr = udp_socket.recvfrom(1024)  # Buffer size is 1024 bytes
+                sender_ip, sender_port = addr  # Extract the sender's IP and port from addr
+                print(f"Received message: {udp_incline_data.decode()} from {sender_ip}:{sender_port}")
+                self.incline_value = udp_incline_data.decode()
+                if (steering_received == 1):                                  #when steering value has chanched, send it to unity
+                    print("send steering data")
+                    await self.send_steering_data_udp(self.steering_data)
+                try:
+                    #self.receiver._receiver.stop_udp_listener()
+                    #print("fan speed (b c)", self.receiver.get_fan_speed())
+                    print("incline from UDP (b c): ", incline_value)
+                    #self.check_new_incline(incline_value)                     #check if tilt value has changed or is still the same
 
-            except Exception as e:
-                print("Error: ", e)
+                except Exception as e:
+                    print("Error: ", e)
 
-            print("udp loop finish")
-            isRunningUDP = False
-            isRunningBT = True
+                print("udp loop finish")
+                isRunningUDP = False
+                isRunningBT = True
 
  #   async def udp_handler_listen(self):
  #       print("open udp socket")
@@ -85,8 +93,10 @@ class UDP_Handler:
 
     def receive_incline_data_udp(self):
         udp_incline_data = 0
+        # Set up the UDP socket
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
-            udp_socket.listen(str(udp_incline_data).encode(), (self.udp_ip_to_master_collector, self.receive_from_collector_port))
+            # Bind the socket to the IP and port
+            udp_socket.bind((self.udp_ip_to_master_collector, self.receive_from_collector_port))
             print("Hello: ", udp_incline_data)
             self.incline_value = udp_incline_data
 
@@ -275,8 +285,8 @@ class BLE_Handler:
                 # raise
 
 async def main():
-    ble_async_init_task = asyncio.create_task(ble.async_init())
-    await ble_async_init_task
+    #ble_async_init_task = asyncio.create_task(ble.async_init())
+    #await ble_async_init_task
 
     #ble_handler_task = asyncio.create_task(ble.read_and_ride_rizer())
     print("ble main started")
