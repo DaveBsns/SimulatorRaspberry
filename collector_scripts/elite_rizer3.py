@@ -8,7 +8,7 @@ from master_collector import DataReceiver
 global incline_received                         #received tilt data form UDP. Ready to send over BLE
 global steering_received                        #received steering data from RIZER. Ready to send over UDP
 global incline_value
-global current_tilt_value_on_razer              # current incline from RAZER to compute 0.5 steps fo reach desired incline
+global current_tilt_value_on_razer              #current incline from RAZER to compute 0.5 steps fo reach desired incline
 client = None
 asyncio_sleep = 3
 steering_ready_to_send = 0                     
@@ -85,13 +85,11 @@ class UDP_Handler:
 
     #send steering data over udp
     def send_steering_data_udp(self, steering_data):
-        # Create a UDP socket
-        #print("send steering data: ", steering_data)
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
-            # Send speed_data
+            # Send steering_data
             udp_socket.sendto(str(steering_data).encode(), (self.udp_ip_to_master_collector, self.udp_port))
 
-    def receive_incline_data_udp(self):
+    async def receive_incline_data_udp(self):
         udp_incline_data = 0
         # Set up the UDP socket
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
@@ -223,7 +221,11 @@ class BLE_Handler:
                     print("tilt writed, x ", x)
                 except Exception as e:
                     print("Error: ", e) 
-
+    
+    async def write_numbers(self):
+        for el in range(999999999999999):
+            print(el)
+            await asyncio.sleep(1)
 
     async def notify_steering_callback(self, sender, data):
         data = bytearray(data)
@@ -292,9 +294,11 @@ async def main():
     print("ble main started")
     udp_handler_task = asyncio.create_task(udp.main())
     print("udp main start")
+    numnbers_task = asyncio.create_task(ble.write_numbers())
 #    udp_listener_task = asyncio.create_task(udp.udp_handler_listen())
     #await ble_handler_task
     await udp_handler_task #TODO
+    await numnbers_task
  #   print("start udp listener")
  #   await udp_listener_task
 
