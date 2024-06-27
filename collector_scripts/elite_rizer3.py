@@ -47,7 +47,7 @@ class UDP_Handler:
             await asyncio.sleep(asyncio_sleep)
             print("udp main")
             print("start listener")
-            self.receive_incline_data_udp()
+            # self.receive_incline_data_udp()
             if (steering_received == 1):                                  #when steering value has chanched, send it to unity
                 print("send steering data")
                 await self.send_steering_data_udp(self.steering_data)
@@ -157,7 +157,7 @@ class BLE_Handler:
         current_tilt_value_on_razer = 0
     
     #main function for BLE Handler
-    async def read_and_ride_rizer(self):
+    async def read_and_write_rizer(self):
         global incline_received
         global client
         global isRunningBT
@@ -169,9 +169,10 @@ class BLE_Handler:
             if (self.init_ack == True):
                 await self.read_steering()
                 print("read steering rizer")
-                if (incline_received == 1):
-                    print("write incline")
-                    await self.write_incline(self)
+
+                # if (incline_received == 1):
+                #     print("write incline")
+                #     await self.write_incline(self)
             else:
                 print("wait init ack")
             isRunningBT = False
@@ -184,9 +185,10 @@ class BLE_Handler:
         await asyncio.sleep(asyncio_sleep)
         try:
             await client.start_notify(self.steering_characteristics, self.notify_steering_callback)
+            print(self.steering_characteristics)
             # Access the notification data using data argument
             #print(f"Steering data: {sender}")
-            #print(f"Steering data: {data}")
+            # print(f"Steering data: {data}")
             await asyncio.sleep(0.5) # keeps the connection open for 10 seconds
             await client.stop_notify(self.steering_characteristics.uuid)                                  
         except Exception as e:
@@ -229,7 +231,7 @@ class BLE_Handler:
         
         self.received_steering_data = steering
         print("readed steering: ", self.received_steering_data)
-        udp.send_steering_data_udp(self.received_steering_data)
+        # udp.send_steering_data_udp(self.received_steering_data)
 
     async def async_init(self):
         global client
@@ -279,22 +281,28 @@ class BLE_Handler:
                 # raise
 
 async def main():
-    ble_async_init_task = asyncio.create_task(ble.async_init())
-    await ble_async_init_task
 
-    #ble_handler_task = asyncio.create_task(ble.read_and_ride_rizer())
-    print("ble main started")
-    udp_handler_task = asyncio.create_task(udp.main())
-    print("udp main start")
-#    udp_listener_task = asyncio.create_task(udp.udp_handler_listen())
-    #await ble_handler_task
-    await udp_handler_task #TODO
- #   print("start udp listener")
- #   await udp_listener_task
+    # ble_async_init_task = asyncio.create_task(ble.async_init())
+    # await ble_async_init_task
+
+    # # ble_handler_task = asyncio.create_task(ble.read_and_ride_rizer())
+    # print("ble main started")
+    # udp_handler_task = asyncio.create_task(udp.main())
+    # print("udp main start")
+    # # udp_listener_task = asyncio.create_task(udp.udp_handler_listen())
+    # # await ble_handler_task
+    # await udp_handler_task # todo
+    # # print("start udp listener")
+    # # await udp_listener_task
+    ble_handler = BLE_Handler()
+    udp_handler = UDP_Handler() 
+    await ble_handler.async_init()
+    # await udp_handler.main()
+    await ble_handler.read_and_write_rizer()
 
 # Creating instances of handlers
-udp = UDP_Handler()                
-ble = BLE_Handler()
+# udp = UDP_Handler()                
+# ble_handler = BLE_Handler()
 
 # Call async_init right after the instance is created
 #asyncio.run(ble.async_init())
