@@ -65,6 +65,7 @@ class BluetoothCallback:
     #     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
     #         udp_socket.listen(str(udp_tilt_data).encode(), (self.udp_ip, self.udp_port))
     #         print("Hello: ", udp_tilt_data)
+    
 
 async def read_steering(client, characteristic):
     bluetooth_callback = BluetoothCallback()
@@ -72,19 +73,22 @@ async def read_steering(client, characteristic):
         await client.start_notify(characteristic, bluetooth_callback.notify_steering_callback)
         await asyncio.sleep(10) # keeps the connection open for 10 seconds
         await client.stop_notify(characteristic.uuid) 
-        print("Test steering")                                    
+                                   
     except Exception as e:
-        print("Error: ", e)                    
+        print("Error: ", e)
+
 
 async def write_tilt(client, characteristic):
-    bluetooth_callback = BluetoothCallback()
-    try:
-        #TODO Write bt stuff
-        print("BT stuff")
-        await client.write_gatt_char(CHARACTERISTIC_TILT_UUID, bytes.fromhex(INCREASE_TILT_HEX), response=True)
-        stored_tilt_value += 0.5
-    except Exception as e:
-        print("Error: ", e) 
+        bluetooth_callback = BluetoothCallback()
+        try:
+            #TODO Write bt stuff
+            print("BT stuff")
+            await bluetooth_callback.write_gatt_char(CHARACTERISTIC_TILT_UUID, bytes.fromhex(INCREASE_TILT_HEX), response=True)
+            stored_tilt_value += 0.5
+        except Exception as e:
+            print("Error: ", e)                    
+
+ 
 
 # check if the value of the tilt in unity is the same as on the rizer (currently not possible to check the value. just to store the changes)
 def get_new_tilt_value():
@@ -140,11 +144,22 @@ async def scan_and_connect_rizer():
                                 if("notify" in characteristic.properties and characteristic.uuid == CHARACTERISTICS_STEERING_UUID):
                                     CHARACTERISTIC_STEERING = characteristic
                                     print("CHARACTERISTIC: ", CHARACTERISTIC_STEERING, characteristic.properties)
+
+                        if (service.uuid == SERVICE_TILT_UUID):
+                            incline_service = service
+                            print("[service uuid] ", incline_service.uuid)
+
+                            if (incline_service != ""):
+                                for characteristic in incline_service.characteristics:
+
+                                    print("characteristics UUID: ", characteristic.uuid)
+                                    if("notify" in characteristic.properties and characteristic.uuid == CHARACTERISTIC_TILT_UUID):
+                                        incline_characteristics = characteristic
                             
                             while (True):
                                 print("all ready!")
                                 await read_steering(client, CHARACTERISTIC_STEERING)
-                            #     await write_tilt(client, tilt_characteristics)
+                                await write_tilt(client, incline_characteristics)
                             #     print(tilt_characteristics)
                             #     print("read and write!")
 
