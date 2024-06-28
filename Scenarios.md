@@ -8,13 +8,13 @@ Scenario 1: Easy ride in the city
 * Cars keep their distance
 * Cars don’t drive too fast
 * Intersection with a red light that the cyclist crosses straight 
-* Right turn with a Stop sign, no traffic lights
+* Stop sign at intersection with traffic lights
 * During the day
-* Covers 17 Use Case Actions
+* Covers 15 Use Case Actions
 
 Scenario 1b: Cycling on inclined slopes
 * Ride in the parking garage
-* no use case, just to test the Elize Rizer
+* no use case, just to test the Elite Rizer
 
 Scenario 2: Difficult ride in the city
 * Good weather
@@ -23,25 +23,28 @@ Scenario 2: Difficult ride in the city
 * Fast traffic and close cars passes
 * High traffic density
 * Left turn incl. turning lane and traffic light
-* Right turn without a traffic light and „Vorfahrt gewähren“ sign
+* Intersection without traffic lights and „Vorfahrt gewähren“ sign
+* Zebrastreifen (Pedestrian crossing)
 * Sun sets
-* Covers 17 Use Case Actions
+* Covers 18 Use Case Actions
 
 Scenario 3: Dangerous ride in the city
-* Bad weather: rain and wet roads
 * Obstacles on the ground, narrow points
-* Nighttime
 * Slow cyclists
 * Cars drive fast and way too close
 * Bad parking
-* There is a „Vorfahrt“ intersection, but the car takes the right of way
-* Covers 14 Use Case Actions
+* There is a „Vorfahrt“ intersection, but a car takes the right of way
+* Covers 5 Use Case Actions
 
-Scenario 4: Fun adventure ride in the forest
+Scenario 4: Foggy night ride in the city
+* Nighttime with lantern lights
+* Cars pass by with headlights on
+* Fog makes vision difficult
+* Covers 6 Use Case Actions
+
+Scenario 5: Fun adventure ride in the forest
 * Hilly terrain
-* Fog, snow, slippery conditions
-* Crossing a windy bridge with slippery ground
-* Outside the city
-* 8 Use Case Actions
-* Fun ideas: Animals crossing the path, obstacles on the way etc.
+* Fog
+* Forest
+* Covers 4 Use Case Actions
 
