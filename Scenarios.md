@@ -29,7 +29,6 @@ Scenario 2: Difficult ride in the city
 * Covers 17 Use Case Actions
 
 Scenario 3: Dangerous ride in the city
-* Bad weather: rain and wet roads
 * Obstacles on the ground, narrow points
 * Nighttime with lantern lights
 * Slow cyclists
@@ -38,7 +37,10 @@ Scenario 3: Dangerous ride in the city
 * There is a „Vorfahrt“ intersection
 * Covers 14 Use Case Actions
 
-Scenario 4: Fun adventure ride in the forest
+Scenario 4: Night ride in the city
+
+
+Scenario 5: Fun adventure ride in the forest
 * Hilly terrain
 * Fog, snow, slippery conditions
 * Crossing a windy bridge with slippery ground
