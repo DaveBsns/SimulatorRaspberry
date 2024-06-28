@@ -30,21 +30,20 @@ Scenario 2: Difficult ride in the city
 
 Scenario 3: Dangerous ride in the city
 * Obstacles on the ground, narrow points
-* Nighttime with lantern lights
 * Slow cyclists
 * Cars drive fast and way too close
 * Bad parking
-* There is a „Vorfahrt“ intersection
+* There is a „Vorfahrt“ intersection, but a car takes the right of way
 * Covers 14 Use Case Actions
 
-Scenario 4: Night ride in the city
-
+Scenario 4: Foggy night ride in the city
+* Nighttime with lantern lights
+* Cars pass by with headlights on
+* Fog makes vision difficult
 
 Scenario 5: Fun adventure ride in the forest
 * Hilly terrain
-* Fog, snow, slippery conditions
-* Crossing a windy bridge with slippery ground
+* Fog
 * Outside the city
-* 8 Use Case Actions
-* Fun ideas: Animals crossing the path, obstacles on the way etc.
+*  Use Case Actions
 
