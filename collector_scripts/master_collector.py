@@ -81,7 +81,7 @@ class DataReceiver:
     
     def get_resistance(self):
         #global ble_resistance
-        print("Self ble incline: ", self.ble_resistance)
+        print("Self ble resistance: ", self.ble_resistance)
         return self.ble_resistance
     
     def send_udp_data_to_rizer(self, incline_data):
@@ -116,7 +116,7 @@ class DataReceiver:
     def send_udp_data_to_direto(self, resistance_data):
         # Create a dictionary with the required parameters
         data = {
-            "fanSpeed": float(resistance_data),
+            "diretoResistance": float(resistance_data),
         }
         print(data)
         # Convert dictionary to JSON string

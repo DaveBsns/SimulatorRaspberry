@@ -1,4 +1,5 @@
 import socket
+import json
 
 def send_udp_data(ip, port, data):
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
@@ -6,6 +7,21 @@ def send_udp_data(ip, port, data):
         data_bytes = str(data).encode()
         udp_socket.sendto(data_bytes, (ip, port))
         print(f"Gesendete Nachricht: {data} an {ip}:{port}")
+
+def send_udp_json_data(ip, port, data):
+        
+        json_data = {
+            "diretoResistance": float(data),
+        }
+        print(json_data)
+        # Convert dictionary to JSON string
+        json_data = json.dumps(json_data)
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
+            # Konvertiere die Ganzzahl in Bytes
+            data_bytes = str(json_data).encode()
+            udp_socket.sendto(data_bytes, (ip, port))
+            print(f"Gesendete Nachricht: {data} an {ip}:{port}")
+
 
 # Beispiel für die Nutzung der Funktion
 if __name__ == "__main__":
@@ -18,4 +34,4 @@ if __name__ == "__main__":
         port = int(input("Geben Sie den Port des Empfängers ein: "))
         data = int(input("Geben Sie die zu sendende Ganzzahl ein: "))
         # UDP-Daten senden
-        send_udp_data(ip, port, data)
+        send_udp_json_data(ip, port, data)

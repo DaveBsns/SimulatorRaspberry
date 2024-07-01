@@ -3,6 +3,7 @@ from bleak import BleakScanner, BleakClient, exc
 import struct
 import sys
 import socket 
+import json
 
 device_name = "DIRETO XR"  # Replace with the name of your desired BLE device
 DEVICE = ""
@@ -13,9 +14,11 @@ SERVICE = ""
 characteristic_resistance_uuid = "00002ad9-0000-1000-8000-00805f9b34fb" # Write Resistance
 characteristic_speed_uuid = "00002ad2-0000-1000-8000-00805f9b34fb"  # Read Speed
 
-
 CHARACTERISTIC_RESISTANCE = ""
 CHARACTERISTIC_SPEED = ""
+
+UDP_IP_FROM_MASTER_COLLECTOR = "127.0.0.3"
+RECEIVE_FROM_MASTER_COLLECTOR_PORT = 2225
 
 
 class BluetoothCallback:
@@ -62,22 +65,23 @@ def normalize_speed_value(value, min_val, max_val):
     return normalized_value
 
 
-async def write_resistance(client, characteristic):
+async def write_resistance(client, characteristic, resistance_value):
     bluetooth_callback = BluetoothCallback()
     try:
         await client.start_notify(characteristic, bluetooth_callback.notify_resistance_callback) # characteristic.uuid  
     except Exception as e:
         print("Error: ", e) 
     # resistance_input = input("Enter a value between 1-100 to set the resistance level. (or 'x' to exit): ")
-    resistance_input = 60
-    resistance_value = int(resistance_input)
+    resistance_value = int(resistance_value)
     try:
-        if 1 <= resistance_value <= 100:
-            await client.write_gatt_char(characteristic, bytearray([0x04, resistance_value]))
-        elif resistance_input.lower() == 'x':
-            await client.stop_notify(characteristic) # characteristic.uuid
-            await asyncio.sleep(1)
-            sys.exit()
+        #if 1 <= resistance_value <= 100:
+        resistance_value = min(resistance_value, 100)
+        resistance_value = max(resistance_value, 0)
+        await client.write_gatt_char(characteristic, bytearray([0x04, resistance_value]))
+       # elif resistance_value.lower() == 'x':
+        #    await client.stop_notify(characteristic) # characteristic.uuid
+       #     await asyncio.sleep(1)
+       #     sys.exit()
     except ValueError:
         print("Invalid input. Please enter a number between 1 and 100.")
     # print("Test resistance")
@@ -156,10 +160,16 @@ async def scan_and_connect_direto():
                                 if("notify" in characteristic.properties and characteristic.uuid == characteristic_speed_uuid):
                                     CHARACTERISTIC_SPEED = characteristic
                                     # print("Characteristic speed: ",CHARACTERISTIC_SPEED)
-
-                            while True:
-                                await write_resistance(client, CHARACTERISTIC_RESISTANCE)
-                                await read_speed(client, CHARACTERISTIC_SPEED)
+                            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
+                                udp_socket.bind((UDP_IP_FROM_MASTER_COLLECTOR, RECEIVE_FROM_MASTER_COLLECTOR_PORT))
+                                while True:
+                                    resistance_data, addr = udp_socket.recvfrom(1024)                                      # Buffer size is 1024 bytes
+                                    sender_ip, sender_port = addr                                                           # Extract the sender's IP and port from addr
+                                    print(f"Received message: {resistance_data.decode()} from {sender_ip}:{sender_port}")
+                                    resistance_data = json.loads(resistance_data.decode())
+                                    resistance_value = int(resistance_data["diretoResistance"])
+                                    await write_resistance(client, CHARACTERISTIC_RESISTANCE, resistance_value)
+                                    await read_speed(client, CHARACTERISTIC_SPEED)
             except exc.BleakError as e:
                 print(f"Failed to connect/discover services of {DEVICEID.name}: {e}")
                 # Add additional error handling or logging as needed

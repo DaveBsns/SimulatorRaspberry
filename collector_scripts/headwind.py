@@ -1,6 +1,9 @@
 import asyncio
 from bleak import BleakScanner, BleakClient, exc
 from master_collector import DataReceiver
+import socket
+import json
+import select
 
 class BluetoothCallback():
     def __init__(self):
@@ -21,6 +24,9 @@ SERVICE = ""
 characteristic_uuid = "a026e038-0a7d-4ab3-97fa-f1500f9feb8b" 
 CHARACTERISTIC = ""
 
+UDP_IP_FROM_MASTER_COLLECTOR = "127.0.0.3"
+RECEIVE_FROM_MASTER_COLLECTOR_PORT = 2224
+
 async def scan_and_connect_headwind():
     global device_name
 
@@ -34,13 +40,16 @@ async def scan_and_connect_headwind():
     global old_value
 
     global is_first_entry
-    global run_read_loop  
+    global run_read_loop 
+
+    speed_value = 0 
 
     stop_event = asyncio.Event()  
 
     # Scanning and printing for BLE devices
     def callback(device, advertising_data):
-        global DEVICEID   
+        global DEVICEID  
+
         print(device)
         if(device.name == device_name):
             DEVICEID = device
@@ -83,58 +92,39 @@ async def scan_and_connect_headwind():
                                     
                                     bluetooth_callback = BluetoothCallback()
                                     #receiver.open_udp_socket()
-                                    while True:
-                                        
-                                        try:
-                                            print("headwind: try")
-                                            #receiver.start_udp_listener()
-                                            # print("FAN SPEED: ", receiver.get_fan_speed())
-                                            speed_value = DataReceiver.ble_fan_speed
-                                            print("incline: ", DataReceiver.get_ble_incline())
-                                            print("Fan Speed: ", DataReceiver.get_ble_fan_speed())
-                                            print("Fan Speed: ", speed_value)
-                                            print("get ble incline headwind", DataReceiver.get_ble_incline())
-                                        except Exception as e:
-                                            print("Error: ", e)
-                                        try:
-                                            await client.start_notify(CHARACTERISTIC, bluetooth_callback.notify_callback) # characteristic.uuid  
-                                        except Exception as e:
-                                            print("Error: ", e)
+                                    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
+                                        udp_socket.bind((UDP_IP_FROM_MASTER_COLLECTOR, RECEIVE_FROM_MASTER_COLLECTOR_PORT))
+                                        while True:
+                                            try:
+                                                ble_fan_data, addr = udp_socket.recvfrom(1024)                                          # Buffer size is 1024 bytes
+                                                sender_ip, sender_port = addr                                                           # Extract the sender's IP and port from addr
+                                                print(f"Received message: {ble_fan_data.decode()} from {sender_ip}:{sender_port}")
+                                                print("ble fan data: ", ble_fan_data)
+                                                ble_fan_value = json.loads(ble_fan_data.decode())
+                                                print("decoded fan value ", ble_fan_value)
+                                                speed_value = int(ble_fan_value["fanSpeed"])
+                                                 
+                                                print("ble_fan_value: ", ble_fan_value)
+                                                print("value: ", speed_value)
+                                            except Exception as e:
+                                                print("Error: ", e)
+                                            try:
+                                                await client.start_notify(CHARACTERISTIC, bluetooth_callback.notify_callback) # characteristic.uuid  
+                                            except Exception as e:
+                                                print("Error: ", e)
 
-                                    
-                                        '''
-                                        try:
-                                            if speed_value > 0:
-                                                await client.write_gatt_char(CHARACTERISTIC, bytearray([0x04, 0x04])) # Turns fan on -> bytearray([0x04, 0x04]), Turns fan off -> bytearray([0x04, 0x01]), Adjust fan Speed -> bytearray([0x02, <Decimalvalue between 1 and 100>])
-                                            elif speed_value <= 0:
-                                                await client.write_gatt_char(CHARACTERISTIC, bytearray([0x04, 0x01])) # Turn fan off
-                                            else:
-                                                print("Speed value should be between 1 and 100.")
-                                        except ValueError:
-                                            print("Error turning fan on or off.")
-
-                                        try:
-                                            if speed_value > 0:
-                                                await client.write_gatt_char(CHARACTERISTIC, bytearray([0x02, speed_value]))
-                                                print(f"Fan speed set to {speed_value}")
-                                            else:
-                                                print("Speed value should be between 1 and 100.")
-                                        except ValueError:
-                                            print("Invalid input. Please enter a number between 1 and 100.")
-
-                                        '''
-                                        try:
-                                            if 2 <= speed_value <= 100:
-                                                await client.write_gatt_char(CHARACTERISTIC, bytearray([0x02, speed_value]))
-                                                print(f"Fan speed set to {speed_value}")
-                                            elif speed_value == 1:
-                                                await client.write_gatt_char(CHARACTERISTIC, bytearray([0x04, 0x04])) # Turns fan on -> bytearray([0x04, 0x04]), Turns fan off -> bytearray([0x04, 0x01]), Adjust fan Speed -> bytearray([0x02, <Decimalvalue between 1 and 100>])
-                                            elif speed_value == 0:
-                                                await client.write_gatt_char(CHARACTERISTIC, bytearray([0x04, 0x01]))
-                                            else:
-                                                print("Speed value should be between 1 and 100.")
-                                        except ValueError:
-                                            print("Invalid input. Please enter a number between 1 and 100.")
+                                            try:
+                                                if 2 <= speed_value <= 100:     #TODO we have to write 1 before we can write some other values
+                                                    await client.write_gatt_char(CHARACTERISTIC, bytearray([0x02, speed_value]))
+                                                    print(f"Fan speed set to {speed_value}")
+                                                elif speed_value == 1:
+                                                    await client.write_gatt_char(CHARACTERISTIC, bytearray([0x04, 0x04])) # Turns fan on -> bytearray([0x04, 0x04]), Turns fan off -> bytearray([0x04, 0x01]), Adjust fan Speed -> bytearray([0x02, <Decimalvalue between 1 and 100>])
+                                                elif speed_value == 0:
+                                                    await client.write_gatt_char(CHARACTERISTIC, bytearray([0x04, 0x01]))
+                                                else:
+                                                    print("Speed value should be between 1 and 100.")
+                                            except ValueError:
+                                                print("Invalid input. Please enter a number between 1 and 100.")
                                             
             except exc.BleakError as e:
                 print(f"Failed to connect/discover services of {DEVICEID.name}: {e}")

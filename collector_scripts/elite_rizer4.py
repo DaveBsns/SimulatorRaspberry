@@ -55,11 +55,10 @@ class Rizer:
                 
                 incline_value = json.loads(udp_incline_data.decode())
                 incline_value = int(incline_value["rizerIncline"])
-                if self.check_new_incline(incline_value):                                   #check if the incline value has changed
+                if self.check_new_incline(incline_value):                                               #check if the incline value has changed
                     await self.write_incline()                                                          #write the new incline value to the Rizer
 
-                print("want to read steering! =(")
-                await self.read_steering()
+                await self.read_steering()                                                              #read steering over BLE
                 
 
 #---------------------------UDP functions--------------------------------
