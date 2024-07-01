@@ -10,9 +10,12 @@ def send_udp_data(ip, port, data):
 # Beispiel für die Nutzung der Funktion
 if __name__ == "__main__":
     # Eingaben vom Benutzer einholen
-    ip = input("Geben Sie die IP-Adresse des Empfängers ein: ")
-    port = int(input("Geben Sie den Port des Empfängers ein: "))
-    data = int(input("Geben Sie die zu sendende Ganzzahl ein: "))
-
-    # UDP-Daten senden
-    send_udp_data(ip, port, data)
+    if input("rizer? ") == ("y"):
+        incline = int(input("incline "))
+        send_udp_data("127.0.0.3", 2223, incline)
+    else:
+        ip = input("Geben Sie die IP-Adresse des Empfängers ein: ")
+        port = int(input("Geben Sie den Port des Empfängers ein: "))
+        data = int(input("Geben Sie die zu sendende Ganzzahl ein: "))
+        # UDP-Daten senden
+        send_udp_data(ip, port, data)

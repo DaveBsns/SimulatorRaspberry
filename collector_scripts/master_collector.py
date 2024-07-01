@@ -62,17 +62,13 @@ class DataReceiver:
         self.send_to_rizer_port = 2223
         self.send_to_headwind_port = 2224
         self.send_to_direto_port = 2225
-        self.udp_unity_receive_socket = None
-        self.main_loop()
-
-        # self.udp_unity_receive_ip = "127.0.0.1"
-        # self.udp_unity_receive_port = 12345
     
     def set_ble_fan_speed(self, fan_speed):
         self.ble_fan_speed = fan_speed
 
     def set_ble_incline(self, incline_data):
         self.ble_incline = incline_data
+        print("Self incline data: ", self.ble_incline)
 
     def get_fan_speed(self):
         #global ble_fan_speed
@@ -87,47 +83,6 @@ class DataReceiver:
         #global ble_resistance
         print("Self ble incline: ", self.ble_resistance)
         return self.ble_resistance
-
-    def main_loop(self):
-        print("start main loop master collector")
-        for x in range -20, 40:
-            self.send_udp_data_to_rizer(x)
-            time.sleep(2)
-            
-        
-    # UDP socket to receive data from Unity
-    def open_udp_socket(self):
-        # Create a UDP socket
-        udp_unity_receive_ip = "127.0.0.1"
-        udp_unity_receive_port = 12345
-
-        self.udp_unity_receive_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.udp_unity_receive_socket.bind((udp_unity_receive_ip, udp_unity_receive_port))
-
-        print("Listening for UDP data...")
-
-    def start_udp_listener(self):
-
-        # Infinite loop to continuously receive data
-        try:
-            data_receiver = DataReceiver()
-            data, addr = self.udp_unity_receive_socket.recvfrom(1024)  # Buffer size is 1024 bytes  
-
-            #self.udp_unity_receive_socket.setblocking(False)
-
-            json_data = data.decode('utf-8')  # Decode bytes to string
-            # value = json.loads(data.decode())
-            unity_values = json.loads(json_data)
-            self.ble_fan_value = unity_values["bleFan"]
-            self.ble_incline_value = unity_values["bleIncline"]
-            # print("ble fan from unity: ", ble_fan_value)
-            print("incline from unity: ", self.ble_incline_value)
-            data_receiver.set_ble_fan_speed(self.ble_fan_value)
-            data_receiver.set_ble_incline(self.ble_incline_value)
-            print("incline mastercollector", data_receiver.get_incline())
-            #self.ble_incline = self.ble_incline_value                      #maybe ble_xx_value is not nessesary and we can use the self.ble_xx directly
-        except Exception as e:
-            print(f"Error while receiving UDP data: {e}")
     
     def send_udp_data_to_rizer(self, incline_data):
         # Create a dictionary with the required parameters
@@ -224,7 +179,7 @@ if __name__ == "__main__":
         # print("udp_direto_socket: ", udp_direto_socket)
         data_sender.send_unity_data_udp(data_sender.speed_value, data_sender.steering_value, data_sender.brake_value, data_sender.bno_value, data_sender.roll_value)
         readable, _, _ = select.select([udp_rizer_socket, udp_direto_socket, udp_brake_socket, udp_bno_socket, udp_roll_socket], [], [])
-        
+
         for sock in readable:
             data, addr = sock.recvfrom(1024)
             if sock is udp_rizer_socket:

@@ -2,6 +2,7 @@ import asyncio
 from bleak import BleakClient, exc
 import socket
 import time
+import json
 
 class Rizer:
     #BLE constant
@@ -19,7 +20,7 @@ class Rizer:
 
     #UDP constant
     UDP_IP_TO_MASTER_COLLECTOR = "127.0.0.1"        # Send the rizer data to the master_collector.py script via UDP over localhost
-    UDP_IP_FROM_MASTER_COLLECOTOR = "127.0.0.3"
+    UDP_IP_FROM_MASTER_COLLECTOR = "127.0.0.3"
     udp_port = 2222
     RECEIVE_FROM_MASTER_COLLECTOR_PORT = 2223
 
@@ -27,7 +28,7 @@ class Rizer:
 
     def __init__(self) -> None:
         # UDP initialization
-        self.received_steering_data = 0  # Initialize with None or any default value
+        self.received_steering_data = 0             # Initialize with None or any default value
         self.client_is_connected = False
 
 
@@ -42,17 +43,22 @@ class Rizer:
         print("main")
         # create UDP socket to receive data from master collector
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
-            udp_socket.bind((self.UDP_IP_FROM_MASTER_COLLECOTOR, self.RECEIVE_FROM_MASTER_COLLECTOR_PORT))
+            udp_socket.bind((self.UDP_IP_FROM_MASTER_COLLECTOR, self.RECEIVE_FROM_MASTER_COLLECTOR_PORT))
             await self.connect_rizer()                                                                        #connect to the Rizer
 
             while(True):
                 # Receive data from the socket
+                print("wait for udp")
                 udp_incline_data, addr = udp_socket.recvfrom(1024)                                      # Buffer size is 1024 bytes
                 sender_ip, sender_port = addr                                                           # Extract the sender's IP and port from addr
                 print(f"Received message: {udp_incline_data.decode()} from {sender_ip}:{sender_port}")
-
-                if self.check_new_incline(udp_incline_data.decode()):                                   #check if the incline value has changed
+                
+                incline_value = json.loads(udp_incline_data.decode())
+                incline_value = int(incline_value["rizerIncline"])
+                if self.check_new_incline(incline_value):                                   #check if the incline value has changed
                     await self.write_incline()                                                          #write the new incline value to the Rizer
+
+                print("want to read steering! =(")
                 await self.read_steering()
                 
 
@@ -76,19 +82,17 @@ class Rizer:
 
 
 #---------------------------BLE functions--------------------------------
-
     #function to initialize the BLE connection with the Rizer
     async def connect_rizer(self):
-        global client
         print("start async init")
         while not self.client_is_connected:
             try:
-                client = BleakClient(self.DEVICE_UUID, timeout=90)
+                self.client = BleakClient(self.DEVICE_UUID, timeout=90)
                 print("try to connect")
-                await client.connect()
+                await self.client.connect()
                 self.client_is_connected = True
                 print("Client connected to ", self.DEVICE_UUID)
-                for service in client.services:
+                for service in self.client.services:
                     if (service.uuid == self.SERVICE_STEERING_UUID):
                         self.steering_service = service
                         print("[service uuid] ", self.steering_service.uuid)
@@ -127,16 +131,20 @@ class Rizer:
 
     #write incline to rizer over ble and store the value of his state
     async def write_incline(self):
-        global client
         incline = self.get_incline_value()
-        incline_different_temp = int(self.current_incline_on_rizer) + int(incline)        #absolute different of old and new incline value
+        incline = min(int(incline), 40)
+        incline = max(int(incline), -20)
+        incline = int(incline)
+        print("current incline: ", int(self.current_incline_on_rizer), " Incline: ", int(incline) )
+        incline_different_temp = int(incline) - int(self.current_incline_on_rizer)         #absolute different of old and new incline value
         incline_different = abs(incline_different_temp)
         print("incline_different", incline_different)
+        # print("Incline: ", incline, " current Incline: ", current_incline_on_rizer)
 
-        if(int(self.current_incline_on_rizer) + int(incline) > 0):
+        if((int(incline) - int(self.current_incline_on_rizer)) > 0):
             for x in range (incline_different):
                 try:
-                    await client.write_gatt_char(self.CHARACTERISTIC_INCLINE_UUID, bytes.fromhex(self.INCREASE_INCLINE_HEX), response=True)
+                    await self.client.write_gatt_char(self.CHARACTERISTIC_INCLINE_UUID, bytes.fromhex(self.INCREASE_INCLINE_HEX), response=True)
                     self.current_incline_on_rizer += 1
                     #self.incline_received = 0
                     print("tilt writed, x ", x)
@@ -145,7 +153,7 @@ class Rizer:
         else:
              for x in range (incline_different):
                 try:
-                    await client.write_gatt_char(self.CHARACTERISTIC_INCLINE_UUID, bytes.fromhex(self.DECREASE_INCLINE_HEX), response=True)
+                    await self.client.write_gatt_char(self.CHARACTERISTIC_INCLINE_UUID, bytes.fromhex(self.DECREASE_INCLINE_HEX), response=True)
                     self.current_incline_on_rizer += -1
                     #self.incline_received = 0
                     print("tilt writed, x -", x)
@@ -157,12 +165,12 @@ class Rizer:
         data = bytearray(8)
         sender = 0
         try:
-            await client.start_notify(self.steering_characteristics, self.notify_steering_callback)
+            await self.client.start_notify(self.steering_characteristics, self.notify_steering_callback)
             # Access the notification data using data argument
-            #print(f"Steering data: {sender}")
-            #print(f"Steering data: {data}")
+            # print(f"Steering data: {sender}")
+            # print(f"Steering data: {data}")
             await asyncio.sleep(0.1) # keeps the connection open for 10 seconds
-            await client.stop_notify(self.steering_characteristics.uuid)                                  
+            await self.client.stop_notify(self.steering_characteristics.uuid)                                  
         except Exception as e:
             print("Error: ", e) 
 
