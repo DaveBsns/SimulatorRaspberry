@@ -78,6 +78,7 @@ async def write_resistance(client, characteristic, resistance_value):
         #if 1 <= resistance_value <= 100:
         resistance_value = min(resistance_value, 100)
         resistance_value = max(resistance_value, 0)
+        print("write Resistance: ", resistance_value)
         await client.write_gatt_char(characteristic, bytearray([0x04, resistance_value]))
        # elif resistance_value.lower() == 'x':
         #    await client.stop_notify(characteristic) # characteristic.uuid
@@ -159,11 +160,16 @@ async def scan_and_connect_direto():
                                 udp_socket.setblocking(False)
                                 while True:
                                     try:
-                                        resistance_data, addr = udp_socket.recvfrom(1024)                                      # Buffer size is 1024 bytes
-                                        sender_ip, sender_port = addr                                                           # Extract the sender's IP and port from addr
-                                        print(f"Received message: {resistance_data.decode()} from {sender_ip}:{sender_port}")
-                                        resistance_data = json.loads(resistance_data.decode())
-                                        resistance_value = int(resistance_data["diretoResistance"])
+                                        while True:
+                                            try:
+                                                resistance_data, addr = udp_socket.recvfrom(47)
+                                                sender_ip, sender_port = addr
+                                                print(f"Received message: {resistance_data.decode()} from {sender_ip}:{sender_port}")
+                                                resistance_data = json.loads(resistance_data.decode())
+                                                resistance_value = int(resistance_data["diretoResistance"])                                                 # Extract the sender's IP and port from addr
+                                            except BlockingIOError:
+                                                break
+                                            
                                     except BlockingIOError:
                                         time.sleep(0.01)  # Small sleep to prevent busy-waiting
                                     await write_resistance(client, CHARACTERISTIC_RESISTANCE, resistance_value)

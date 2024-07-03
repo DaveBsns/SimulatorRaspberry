@@ -11,7 +11,7 @@ def send_udp_data(ip, port, data):
 def send_udp_json_data(ip, port, data):
         
         json_data = {
-            "diretoResistance": float(data),
+            "fanSpeed": float(data),
         }
         print(json_data)
         # Convert dictionary to JSON string

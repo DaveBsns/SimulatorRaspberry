@@ -98,16 +98,21 @@ async def scan_and_connect_headwind():
                                         udp_socket.setblocking(False)                                                                   #without this flag it waits until it gets data
                                         while True:
                                             try:
-                                                ble_fan_data, addr = udp_socket.recvfrom(1024)                                          # Buffer size is 1024 bytes
-                                                sender_ip, sender_port = addr                                                           # Extract the sender's IP and port from addr
-                                                print(f"Received message: {ble_fan_data.decode()} from {sender_ip}:{sender_port}")
-                                                print("ble fan data: ", ble_fan_data)
-                                                ble_fan_value = json.loads(ble_fan_data.decode())
-                                                print("decoded fan value ", ble_fan_value)
-                                                speed_value = int(ble_fan_value["fanSpeed"])
-                                                 
-                                                print("ble_fan_value: ", ble_fan_value)
-                                                print("value: ", speed_value)
+                                                while True:
+                                                    try:
+                                                        ble_fan_data, addr = udp_socket.recvfrom(47)
+                                                        sender_ip, sender_port = addr
+                                                        print(f"Received message: {ble_fan_data.decode()} from {sender_ip}:{sender_port}")  # Extract the sender's IP and port from addr
+                                                        print("ble fan data: ", ble_fan_data)
+                                                        ble_fan_value = json.loads(ble_fan_data.decode())
+                                                        print("decoded fan value ", ble_fan_value)
+                                                        speed_value = int(ble_fan_value["fanSpeed"])
+                                                        
+                                                        print("ble_fan_value: ", ble_fan_value)
+                                                        print("value: ", speed_value)
+                                                    except BlockingIOError:
+                                                        break    
+                                                
                                             except BlockingIOError:
                                                 time.sleep(0.01)  # Small sleep to prevent busy-waiting
                                             except Exception as e:
