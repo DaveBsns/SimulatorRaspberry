@@ -63,14 +63,6 @@ class Rizer:
                     incline_value = int(incline_value["rizerIncline"])
                 except BlockingIOError:
                     time.sleep(0.01)  # Small sleep to prevent busy-waiting
-                    #time.sleep(1)
-                
-                # Timer logic
-                #time.sleep(0.01) 
-                #self.incline_timer += 0.01  # Assuming 100 Hz timer (0.01 seconds per loop iteration)
-
-                #if self.incline_timer >= (1):
-                    #self.incline_timer = 0  # Reset timer
 
                 if self.check_new_incline(incline_value):                                               #check if the incline value has changed
                     await self.write_incline()                                                          #write the new incline value to the Rizer
@@ -150,29 +142,29 @@ class Rizer:
         incline = self.get_incline_value()
         incline = int(incline)
         print("current incline: ", int(self.current_incline_on_rizer), " Incline: ", int(incline) )
-        incline_different_temp = int(incline) - int(self.current_incline_on_rizer)         #absolute different of old and new incline value
+        incline_different_temp = int(incline) - int(self.current_incline_on_rizer)         #absolute difference of old and new incline value
         incline_different = abs(incline_different_temp)
-        print("incline_different", incline_different)
+        print("incline_difference: ", incline_different)
         # print("Incline: ", incline, " current Incline: ", current_incline_on_rizer)
 
         if((int(incline) - int(self.current_incline_on_rizer)) > 0):
-            #for x in range (incline_different):
-            try:
-                await self.client.write_gatt_char(self.CHARACTERISTIC_INCLINE_UUID, bytes.fromhex(self.INCREASE_INCLINE_HEX), response=True)
-                self.current_incline_on_rizer += 1
-                #self.incline_received = 0
-                #print("tilt writed, x ", x)
-            except Exception as e:
-                print("Error: ", e) 
+            for x in range (incline_different):
+                try:
+                    await self.client.write_gatt_char(self.CHARACTERISTIC_INCLINE_UUID, bytes.fromhex(self.INCREASE_INCLINE_HEX), response=True)
+                    self.current_incline_on_rizer += 1
+                    #self.incline_received = 0
+                    print("tilt writed, x ", x)
+                except Exception as e:
+                    print("Error: ", e) 
         else:
-             #for x in range (incline_different):
-            try:
-                await self.client.write_gatt_char(self.CHARACTERISTIC_INCLINE_UUID, bytes.fromhex(self.DECREASE_INCLINE_HEX), response=True)
-                self.current_incline_on_rizer += -1
-                #self.incline_received = 0
-                #print("tilt writed, x -", x)
-            except Exception as e:
-                print("Error: ", e)
+            for x in range (incline_different):
+                try:
+                    await self.client.write_gatt_char(self.CHARACTERISTIC_INCLINE_UUID, bytes.fromhex(self.DECREASE_INCLINE_HEX), response=True)
+                    self.current_incline_on_rizer += -1
+                    #self.incline_received = 0
+                    print("tilt writed, x -", x)
+                except Exception as e:
+                    print("Error: ", e)
 
     #read steering from the Rizer
     async def read_steering(self):
