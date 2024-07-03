@@ -4,6 +4,7 @@ import struct
 import sys
 import socket 
 import json
+import time
 
 device_name = "DIRETO XR"  # Replace with the name of your desired BLE device
 DEVICE = ""
@@ -113,6 +114,8 @@ async def scan_and_connect_direto():
     global CHARACTERISTIC_RESISTANCE
     global CHARACTERISTIC_SPEED
 
+    resistance_value = 0
+
     stop_event = asyncio.Event()  
 
     # Scanning and printing for BLE devices
@@ -125,16 +128,7 @@ async def scan_and_connect_direto():
             stop_event.set()
             
     # Stops the scanning event    
-    async with BleakScanner(callback) as scanner:
-        # new 
-        '''
-        try:
-            await stop_event.wait()
-        except KeyboardInterrupt:
-            print("Scanning stopped by user.")
-            scanner.stop()
-        # new end
-        '''    
+    async with BleakScanner(callback) as scanner:  
         await stop_event.wait()
 
     if(DEVICEID != ""):
@@ -162,12 +156,16 @@ async def scan_and_connect_direto():
                                     # print("Characteristic speed: ",CHARACTERISTIC_SPEED)
                             with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
                                 udp_socket.bind((UDP_IP_FROM_MASTER_COLLECTOR, RECEIVE_FROM_MASTER_COLLECTOR_PORT))
+                                udp_socket.setblocking(False)
                                 while True:
-                                    resistance_data, addr = udp_socket.recvfrom(1024)                                      # Buffer size is 1024 bytes
-                                    sender_ip, sender_port = addr                                                           # Extract the sender's IP and port from addr
-                                    print(f"Received message: {resistance_data.decode()} from {sender_ip}:{sender_port}")
-                                    resistance_data = json.loads(resistance_data.decode())
-                                    resistance_value = int(resistance_data["diretoResistance"])
+                                    try:
+                                        resistance_data, addr = udp_socket.recvfrom(1024)                                      # Buffer size is 1024 bytes
+                                        sender_ip, sender_port = addr                                                           # Extract the sender's IP and port from addr
+                                        print(f"Received message: {resistance_data.decode()} from {sender_ip}:{sender_port}")
+                                        resistance_data = json.loads(resistance_data.decode())
+                                        resistance_value = int(resistance_data["diretoResistance"])
+                                    except BlockingIOError:
+                                        time.sleep(0.01)  # Small sleep to prevent busy-waiting
                                     await write_resistance(client, CHARACTERISTIC_RESISTANCE, resistance_value)
                                     await read_speed(client, CHARACTERISTIC_SPEED)
             except exc.BleakError as e:

@@ -24,6 +24,10 @@ class Rizer:
     udp_port = 2222
     RECEIVE_FROM_MASTER_COLLECTOR_PORT = 2223
 
+    _incline_value = 0
+    incline_rate = 1
+    incline_timer = 0
+
 
 
     def __init__(self) -> None:
@@ -41,24 +45,37 @@ class Rizer:
 
     async def main(self):
         print("main")
+        incline_value = 0
+
         # create UDP socket to receive data from master collector
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
             udp_socket.bind((self.UDP_IP_FROM_MASTER_COLLECTOR, self.RECEIVE_FROM_MASTER_COLLECTOR_PORT))
-            await self.connect_rizer()                                                                        #connect to the Rizer
-
+            udp_socket.setblocking(False)                                                                   # Set the socket to non-blocking mode | without this flag it waits until it gets data
+            await self.connect_rizer()                                                                      #connect to the Rizer                                                                      
             while(True):
                 # Receive data from the socket
-                print("wait for udp")
-                udp_incline_data, addr = udp_socket.recvfrom(1024)                                      # Buffer size is 1024 bytes
-                sender_ip, sender_port = addr                                                           # Extract the sender's IP and port from addr
-                print(f"Received message: {udp_incline_data.decode()} from {sender_ip}:{sender_port}")
+                try:
+                    print("wait for udp")
+                    udp_incline_data, addr = udp_socket.recvfrom(47)  #TODO try SO_RCVBUF                                    # Buffer size is 1024 bytes
+                    sender_ip, sender_port = addr                                                              # Extract the sender's IP and port from addr
+                    print(f"Received message: {udp_incline_data.decode()} from {sender_ip}:{sender_port}")
+                    incline_value = json.loads(udp_incline_data.decode())
+                    incline_value = int(incline_value["rizerIncline"])
+                except BlockingIOError:
+                    time.sleep(0.01)  # Small sleep to prevent busy-waiting
+                    #time.sleep(1)
                 
-                incline_value = json.loads(udp_incline_data.decode())
-                incline_value = int(incline_value["rizerIncline"])
+                # Timer logic
+                #time.sleep(0.01) 
+                #self.incline_timer += 0.01  # Assuming 100 Hz timer (0.01 seconds per loop iteration)
+
+                #if self.incline_timer >= (1):
+                    #self.incline_timer = 0  # Reset timer
+
                 if self.check_new_incline(incline_value):                                               #check if the incline value has changed
                     await self.write_incline()                                                          #write the new incline value to the Rizer
 
-                await self.read_steering()                                                              #read steering over BLE
+                await self.read_steering()                                                              #read steering over BLE ONLY WORKING with master_collector script!!!
                 
 
 #---------------------------UDP functions--------------------------------
@@ -131,8 +148,6 @@ class Rizer:
     #write incline to rizer over ble and store the value of his state
     async def write_incline(self):
         incline = self.get_incline_value()
-        incline = min(int(incline), 40)
-        incline = max(int(incline), -20)
         incline = int(incline)
         print("current incline: ", int(self.current_incline_on_rizer), " Incline: ", int(incline) )
         incline_different_temp = int(incline) - int(self.current_incline_on_rizer)         #absolute different of old and new incline value
@@ -141,23 +156,23 @@ class Rizer:
         # print("Incline: ", incline, " current Incline: ", current_incline_on_rizer)
 
         if((int(incline) - int(self.current_incline_on_rizer)) > 0):
-            for x in range (incline_different):
-                try:
-                    await self.client.write_gatt_char(self.CHARACTERISTIC_INCLINE_UUID, bytes.fromhex(self.INCREASE_INCLINE_HEX), response=True)
-                    self.current_incline_on_rizer += 1
-                    #self.incline_received = 0
-                    print("tilt writed, x ", x)
-                except Exception as e:
-                    print("Error: ", e) 
+            #for x in range (incline_different):
+            try:
+                await self.client.write_gatt_char(self.CHARACTERISTIC_INCLINE_UUID, bytes.fromhex(self.INCREASE_INCLINE_HEX), response=True)
+                self.current_incline_on_rizer += 1
+                #self.incline_received = 0
+                #print("tilt writed, x ", x)
+            except Exception as e:
+                print("Error: ", e) 
         else:
-             for x in range (incline_different):
-                try:
-                    await self.client.write_gatt_char(self.CHARACTERISTIC_INCLINE_UUID, bytes.fromhex(self.DECREASE_INCLINE_HEX), response=True)
-                    self.current_incline_on_rizer += -1
-                    #self.incline_received = 0
-                    print("tilt writed, x -", x)
-                except Exception as e:
-                    print("Error: ", e)
+             #for x in range (incline_different):
+            try:
+                await self.client.write_gatt_char(self.CHARACTERISTIC_INCLINE_UUID, bytes.fromhex(self.DECREASE_INCLINE_HEX), response=True)
+                self.current_incline_on_rizer += -1
+                #self.incline_received = 0
+                #print("tilt writed, x -", x)
+            except Exception as e:
+                print("Error: ", e)
 
     #read steering from the Rizer
     async def read_steering(self):
@@ -177,10 +192,12 @@ class Rizer:
 
 #---------------------------Utility functions--------------------------------
     def set_incline_value(self, incline):
-        self.incline_value = incline
+        incline = min(int(incline), 40)
+        incline = max(int(incline), -20)
+        self._incline_value = incline
 
     def get_incline_value(self):
-        return self.incline_value
+        return self._incline_value
     
     async def notify_steering_callback(self, sender, data):
             data = bytearray(data)
@@ -199,12 +216,12 @@ class Rizer:
 
     #check if the incline value has changed
     def check_new_incline(self, new_inline_udp):
-        print("RIZER incline: ", new_inline_udp)
-        if self.get_incline_value != new_inline_udp:
+        if self.get_incline_value() != new_inline_udp:
             self.set_incline_value(new_inline_udp)
+            print("incline value write BLE: ", self.get_incline_value())
             return True
         else:
-            return False
+            return False      
 
 rizer = Rizer()
 asyncio.run(rizer.main())

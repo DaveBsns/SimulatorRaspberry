@@ -4,6 +4,7 @@ from master_collector import DataReceiver
 import socket
 import json
 import select
+import time
 
 class BluetoothCallback():
     def __init__(self):
@@ -94,6 +95,7 @@ async def scan_and_connect_headwind():
                                     #receiver.open_udp_socket()
                                     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
                                         udp_socket.bind((UDP_IP_FROM_MASTER_COLLECTOR, RECEIVE_FROM_MASTER_COLLECTOR_PORT))
+                                        udp_socket.setblocking(False)                                                                   #without this flag it waits until it gets data
                                         while True:
                                             try:
                                                 ble_fan_data, addr = udp_socket.recvfrom(1024)                                          # Buffer size is 1024 bytes
@@ -106,6 +108,8 @@ async def scan_and_connect_headwind():
                                                  
                                                 print("ble_fan_value: ", ble_fan_value)
                                                 print("value: ", speed_value)
+                                            except BlockingIOError:
+                                                time.sleep(0.01)  # Small sleep to prevent busy-waiting
                                             except Exception as e:
                                                 print("Error: ", e)
                                             try:
