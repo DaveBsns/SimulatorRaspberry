@@ -1,0 +1,3 @@
+- Foot sensor while stand still Structure-borne sound transducer maybe with light barrier or pressure sensor
+- Structure-borne sound transducer for undergound feedback and crashes (rockhorn)
+- Brake feedback (maybe with pressure sensor)
