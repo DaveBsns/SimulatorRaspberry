@@ -123,7 +123,6 @@ async def scan_and_connect_direto():
     def callback(device, advertising_data):
         global DEVICEID   
         # print(device)
-        # print("Test direto")
         if(device.name == device_name):
             DEVICEID = device
             stop_event.set()

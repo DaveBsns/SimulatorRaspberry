@@ -58,7 +58,7 @@ class Rizer:
                     udp_incline_data = 0
                     while True:
                         try:
-                            udp_incline_data, addr = udp_socket.recvfrom(47)
+                            udp_incline_data, addr = udp_socket.recvfrom(47)                # 47 could be smaler, because just one value is sent
                             sender_ip, sender_port = addr
                             print(f"Received message: {udp_incline_data.decode()} from {sender_ip}:{sender_port}")
                             incline_value = json.loads(udp_incline_data.decode())
@@ -68,7 +68,8 @@ class Rizer:
                                                            
 
                 except BlockingIOError:
-                    time.sleep(0.01)  # Small sleep to prevent busy-waiting
+                    #time.sleep(0.01)  # Small sleep to prevent busy-waiting
+                    break
                 
 
                 await self.write_incline()                                                          #write the new incline value to the Rizer

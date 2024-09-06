@@ -23,9 +23,9 @@ if __name__ == "__main__":
                 data, addr = sock.recvfrom(1024)
                 if sock is udp_unity_receive_socket:
                     data = json.loads(data.decode())
-                    unity_ble_fan_speed = data["bleFan"]
-                    unity_ble_incline = data["bleIncline"]
-                    unity_ble_resistance = data["bleResistance"]
+                    unity_ble_fan_speed = data["bleFan"]            # 6 + 4Bytes
+                    unity_ble_incline = data["bleIncline"]          # 10 + 4 Bytes
+                    unity_ble_resistance = data["bleResistance"]    # 13 + 4Bytes
                     print(unity_ble_incline, unity_ble_fan_speed)
                     data_receiver.send_udp_data_to_rizer(unity_ble_incline)
                     data_receiver.send_udp_data_to_headwind(unity_ble_fan_speed)
