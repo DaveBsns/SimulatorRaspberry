@@ -18,6 +18,8 @@ class TestRizer:
 
     listen_data = {}
 
+    data_list = []
+
 
 #---------------------------BLE functions--------------------------------
     #function to initialize the BLE connection with the Rizer
@@ -47,13 +49,8 @@ class TestRizer:
 
     async def on_steering_changed(self, sender, data):
         data = bytearray(data)
-        print(f"")
-        print(f"Sender {sender}: \n Steering changed: {[byte for byte in data]}")
-
-    async def on_steering_changed_to_json(self, sender, data):
-
-        data = bytearray(data)
-        print(f"")
+        self.data_list.append([byte for byte in data])
+        print(f"Sender {sender}: \n Steering changed: {data}")
         print(f"Sender {sender}: \n Steering changed: {[byte for byte in data]}")
 
     
@@ -80,6 +77,9 @@ class TestRizer:
                     self.data[service_uuid] = []
                     
                     for characteristic in service.characteristics:
+                        if (characteristic.uuid == self.CHARACTERISTICS_STEERING_UUID):
+                            self.listCharacteristic.append(characteristic)
+
                         char_uuid = str(characteristic.uuid)
                         char_data = {
                             "uuid": char_uuid,
@@ -116,14 +116,14 @@ rizer = TestRizer()
 
 async def main():
 
-    config = "middle"
+    #config = "middle"
     await rizer.connect_rizer()
 
-    rizer.save_to_json(filename= config +"_ble_device_data.json")
+    #rizer.save_to_json(filename= config +"_ble_device_data.json")
 
+    
 
-
-    '''
+    
     for charc in rizer.listCharacteristic:
 
         await rizer.start_notification(characteristic = charc)
@@ -131,6 +131,17 @@ async def main():
     # Keep the connection alive for a while
     await asyncio.sleep(60)
 
-    await rizer.stop_notification()'''
+    await rizer.stop_notification()
+
+    print(rizer.data_list)
+    # Specify the file path and name
+    file_path = 'rizer_data.json'
+
+    # Open the file in write mode
+    with open(file_path, 'w') as f:
+        # Use json.dump() to serialize the data to JSON format
+        json.dump(rizer.data_list, f, indent=4)
+
+    print(f"Data saved to {file_path}")
 
 asyncio.run(main())
