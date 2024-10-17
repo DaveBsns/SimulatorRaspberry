@@ -1,0 +1,16 @@
+@startuml
+
+class BluetoothCallback {
+  notify_steering_callback
+  read_steering
+  write_tilt
+  scan_and_connect_rizer
+}
+
+class UDP_Handler{
+  send_steering_data_udp
+  listening_udp
+  get_new_tilt_value
+}
+
+@enduml
