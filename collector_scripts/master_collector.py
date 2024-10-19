@@ -8,6 +8,7 @@ class DataSender:
     def __init__(self):
         self.speed_value = 0
         self.steering_value = 0
+        self.steering_angle = 0
         self.brake_value = 0
         self.bno_value = 0
         self.roll_value = 0
@@ -26,20 +27,24 @@ class DataSender:
     
     def collect_bno(self, bno):
         self.bno_value = bno
+
+    def collect_steering_angle(self, steering_angle):
+        self.steering_angle = steering_angle
+
     
     def collect_roll(self, roll):
         self.roll_value = roll
 
-    def send_unity_data_udp(self, speed_data, steering_data, brake_data, bno_data, roll_data):
+    def send_unity_data_udp(self, speed_data, steering_data, brake_data, bno_data, roll_data, steering_angle):
         
-
         # Create a dictionary with the required parameters
         data = {
             "diretoSpeed": float(speed_data),
             "rizerSteering": float(steering_data),
             "espBno": float(bno_data),
             "espBrake": float(brake_data),
-            "espRoll": float(roll_data)
+            "espRoll": float(roll_data),
+            "steeringAngle": float(steering_angle)
         }
         print(data)
         # Convert dictionary to JSON string
@@ -152,6 +157,7 @@ if __name__ == "__main__":
     UDP_PORT_ROLL = 6666
     UDP_PORT_BRAKE = 7777
     UDP_PORT_BNO = 8888
+    UPD_PORT_STEERING_ANGLE = 8778
     # UDP_PORT_UNITY_RECEIVE = 12345 # Port to receive data from unity such as the ble fan data
 
 
@@ -170,6 +176,9 @@ if __name__ == "__main__":
     udp_roll_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     udp_roll_socket.bind((UDP_ESP_IP, UDP_PORT_ROLL))
 
+    udp_steering_angle_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    udp_steering_angle_socket.bind((UDP_ESP_IP, UPD_PORT_STEERING_ANGLE))
+
     # udp_unity_receive_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     # udp_unity_receive_socket.bind((UDP_IP_UNITY_RECEIVE, UDP_PORT_UNITY_RECEIVE))
 
@@ -177,8 +186,8 @@ if __name__ == "__main__":
     
     while True:
         # print("udp_direto_socket: ", udp_direto_socket)
-        data_sender.send_unity_data_udp(data_sender.speed_value, data_sender.steering_value, data_sender.brake_value, data_sender.bno_value, data_sender.roll_value)
-        readable, _, _ = select.select([udp_rizer_socket, udp_direto_socket, udp_brake_socket, udp_bno_socket, udp_roll_socket], [], [])
+        data_sender.send_unity_data_udp(data_sender.speed_value, data_sender.steering_value, data_sender.brake_value, data_sender.bno_value, data_sender.roll_value, data_sender.steering_angle)
+        readable, _, _ = select.select([udp_rizer_socket, udp_direto_socket, udp_brake_socket, udp_bno_socket, udp_roll_socket, udp_steering_angle_socket], [], [])
 
         for sock in readable:
             data, addr = sock.recvfrom(1024)
@@ -205,3 +214,9 @@ if __name__ == "__main__":
                 # print("Roll_Value: ", roll_value)
                 roll_value = roll_value["sensor_value"]
                 data_sender.collect_roll(roll_value)
+
+            elif sock is udp_steering_angle_socket:
+                steering_value = json.loads(data.decode())
+                # print("Roll_Value: ", roll_value)
+                steering_value = steering_value["euler_h"]
+                data_sender.collect_steering_angle(steering_value)
