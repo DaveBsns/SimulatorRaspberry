@@ -43,6 +43,50 @@ class Rizer:
         self.udp_port = 2222
         print("init")
 
+    async def main2(self):
+        await self.connect_rizer()
+        #asyncio.create_task(self.console_input_loop())
+
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
+            udp_socket.bind((self.UDP_IP_FROM_MASTER_COLLECTOR, self.RECEIVE_FROM_MASTER_COLLECTOR_PORT))
+            udp_socket.setblocking(False)
+
+            while True:
+                #await self.write_incline()
+                await self.console_input_loop()
+                time.sleep(0.1)  # prevent busy-waiting
+
+    async def console_input_loop(self):
+        """Loop to get incline input from console and send it to BLE device"""
+        while True:
+            try:
+                incline_value = int(input("Enter incline (-20 to 40): "))
+                if -20 <= incline_value <= 40:
+                    self.set_incline_value(incline_value)
+                    print(f"Setting incline to {incline_value}")
+                    
+                    await self.write_incline()
+                    print(f"new incline value: {self._incline_value}")
+                else:
+                    print("Please enter a value between -20 and 40.")
+            except ValueError:
+                print("Invalid input. Please enter an integer between -20 and 40.")
+
+    async def read_and_print_position(self):
+        """Continuously read and print the current incline position from the Rizer device."""
+        while True:
+            try:
+                # Read the current incline value from the BLE characteristic
+                position_data = await self.client.read_gatt_char(self.CHARACTERISTIC_INCLINE_UUID)
+                # Convert the data from byte format to an integer or appropriate format
+                current_position = int.from_bytes(position_data, byteorder='little', signed=True)
+                print(f"Current Incline Position: {current_position}")
+            except Exception as e:
+                print(f"Error reading incline position: {e}")
+            
+            await asyncio.sleep(1)  # Adjust interval as needed (prints every 1 second here)
+
+
     async def main(self):
         print("main")
         incline_value = 0
@@ -170,7 +214,7 @@ class Rizer:
             #for x in range (incline_different):
                 try:
                     await self.client.write_gatt_char(self.CHARACTERISTIC_INCLINE_UUID, bytes.fromhex(self.DECREASE_INCLINE_HEX), response=True)
-                    self.current_incline_on_rizer += -1
+                    self.current_incline_on_rizer -= 1
                     #self.incline_received = 0
                     #print("incline written, x -", x)
                 except Exception as e:
