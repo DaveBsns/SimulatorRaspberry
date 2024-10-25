@@ -1,0 +1,12 @@
+{
+	"folders": [
+		{
+			"path": "../../../.."
+		},
+		{
+			"name": "Steering_Sensor",
+			"path": ".."
+		}
+	],
+	"settings": {}
+}
