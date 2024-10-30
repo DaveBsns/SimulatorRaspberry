@@ -97,7 +97,12 @@ class Rizer:
             # connect rizer
             await self.connect_rizer()
 
+            for i in range(5):
+
+                await self.write_incline2(up=True, updateValue= False)
+
             while True:
+
                 
                 # get data from UDP
                 incline_value = 3000
@@ -124,13 +129,13 @@ class Rizer:
                     print("Got new Value from UDP: " + str(incline_value))
                     print("Current value incline: " + str(self.current_incline_on_rizer))
 
-                    if (incline_value > self.current_incline_on_rizer and self.current_incline_on_rizer < 20):
+                    if (incline_value > self.current_incline_on_rizer and self.current_incline_on_rizer < 15):
 
                         print("UP 1")
                         await self.write_incline2(up= True)
                         #self.current_incline_on_rizer += 1
 
-                    if (incline_value < self.current_incline_on_rizer and self.current_incline_on_rizer > -9):
+                    if (incline_value < self.current_incline_on_rizer and self.current_incline_on_rizer > -14):
 
                         print("DOWN 1")
                         await self.write_incline2(up= False)
@@ -273,7 +278,7 @@ class Rizer:
                     print("Error: ", e)
 
         #write incline to rizer over ble and store the value of his state
-    async def write_incline2(self, up):
+    async def write_incline2(self, up, updateValue = True):
 
 
         print(f"Current incline on Rizer: {self.current_incline_on_rizer}")
@@ -283,7 +288,7 @@ class Rizer:
             #for x in range (incline_different):
                 try:
                     await self.client.write_gatt_char(self.CHARACTERISTIC_INCLINE_UUID, bytes.fromhex(self.INCREASE_INCLINE_HEX), response=True)
-                    self.current_incline_on_rizer += 1
+                    if (updateValue): self.current_incline_on_rizer += 1
                     #self.incline_received = 0
                     #print("incline written, x ", x)
                 except Exception as e:
@@ -292,7 +297,7 @@ class Rizer:
             #for x in range (incline_different):
                 try:
                     await self.client.write_gatt_char(self.CHARACTERISTIC_INCLINE_UUID, bytes.fromhex(self.DECREASE_INCLINE_HEX), response=True)
-                    self.current_incline_on_rizer -= 1
+                    if (updateValue): self.current_incline_on_rizer -= 1
                     #self.incline_received = 0
                     #print("incline written, x -", x)
                 except Exception as e:
