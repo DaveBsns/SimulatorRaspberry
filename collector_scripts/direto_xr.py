@@ -231,7 +231,8 @@ async def connect_and_listen():
 
 
                                 await asyncio.gather(
-                                    bleSpeedRead(client, CHARACTERISTIC_SPEED, bluetooth_callback.notify_speed_callback),
+                                    #bleSpeedRead(client, CHARACTERISTIC_SPEED, bluetooth_callback.notify_speed_callback),
+                                
                                     bleWrite(client= client, CHARACTERISTIC_RESISTANCE= CHARACTERISTIC_RESISTANCE)
                                 )
 
