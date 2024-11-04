@@ -6,7 +6,7 @@ set pre_execution_script="p110_connect.py"
 ping 127.0.0.1 -n 50 > nul  REM pings to delay the script5
 
 REM Set the list of Python scripts to start
-set python_scripts=("direto_xr.py", "headwind.py", "elite_rizer.py",  "master_collector.py", "master_receiver.py") 
+set python_scripts=("direto_xr_new.py", "headwind.py", "elite_rizer.py",  "master_collector.py", "master_receiver.py") 
 REM "direto_xr.py", "headwind.py",
 
 REM Start the pre-execution script

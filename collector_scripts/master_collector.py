@@ -118,10 +118,11 @@ class DataReceiver:
             # Send JSON data
             udp_socket.sendto(json_data.encode(), (self.send_to_actuator_ip, self.send_to_headwind_port))
 
-    def send_udp_data_to_direto(self, resistance_data):
+    def send_udp_data_to_direto(self, incline_data):
         # Create a dictionary with the required parameters
         data = {
-            "diretoResistance": float(resistance_data),
+            "diretoResistance": float(incline_data),
+            #"rizerIncline": float(incline_data)
         }
         print(data)
         # Convert dictionary to JSON string

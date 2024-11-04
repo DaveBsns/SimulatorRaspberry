@@ -114,7 +114,8 @@ class Rizer:
                             sender_ip, sender_port = addr
                             print(f"Received message: {udp_incline_data.decode()} from {sender_ip}:{sender_port}")
                             incline_value = json.loads(udp_incline_data.decode())
-                            incline_value = int(incline_value["rizerIncline"])                                                 # Extract the sender's IP and port from addr
+                            incline_value = int(incline_value["rizerIncline"])  
+                                                                           # Extract the sender's IP and port from addr
                         except BlockingIOError:
                             break
 

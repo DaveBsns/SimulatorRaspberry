@@ -2,6 +2,7 @@ import asyncio
 import json
 import socket
 import struct
+import time
 from bleak import BleakClient, BleakScanner
 
 # Replace with your device's MAC address and characteristic UUIDs
@@ -43,7 +44,7 @@ async def find_device_by_name():
 async def notify_resistance_callback(self, sender):
     pass
 
-async def write_resistance(client, characteristic, resistance_value):
+async def write_resistance(client, characteristic):
 
     global resistance_queue
     global speed_queue
@@ -58,13 +59,20 @@ async def write_resistance(client, characteristic, resistance_value):
         try:
 
             if (resistance_queue != None):
-                resistance_value = resistance_queue
-                resistance_queue = None
-                resistance_value = min(resistance_value, 100)
+
+
+                #if (resistance_queue <=5):
+                    #resistance_value = 0
+                #else:
+                resistance_value = (resistance_queue + 10) * 3.5
+                resistance_value = min(resistance_value, 150)
                 resistance_value = max(resistance_value, 0)
-                print("write Resistance: ", resistance_value)
+                resistance_queue = None
+                
                 resistance_value = int(resistance_value)
+                print("write Resistance: ", resistance_value)
                 await client.write_gatt_char(characteristic, bytearray([0x04, resistance_value]))
+                await asyncio.sleep(0.25)
 
         except ValueError:
             print("Invalid input. Please enter a number between 1 and 100.")
@@ -93,7 +101,7 @@ async def notify_speed_callback(sender, data):
         output = abs(output)
 
     normalized_output_speed = normalize_speed_value(output, 0.0, 2.5)
-    print(f"Received speed : {normalized_output_speed}")
+    #print(f"Received speed : {normalized_output_speed}")
     speed_queue = normalized_output_speed
 
 
@@ -109,49 +117,57 @@ async def main_ble():
     global characteristic_resistance_uuid
     global characteristic_speed_uuid
 
-    DEVICE_ADDRESS = await find_device_by_name()
-    SERVICE = ""
-    CHARACTERISTIC_RESISTANCE = ""
-    CHARACTERISTIC_SPEED = ""
-
-    async with BleakClient(DEVICE_ADDRESS) as client:
-        if not client.is_connected:
-            print("Failed to connect to device.")
-            return
-        
-        for service in client.services:
-
-            if (service.uuid == service_uuid):
-                SERVICE = service    
-
-        if (SERVICE != ""):
-
-            for characteristic in SERVICE.characteristics:
-
-                if("write" in characteristic.properties and characteristic.uuid == characteristic_resistance_uuid):
-                    CHARACTERISTIC_RESISTANCE = characteristic
-                    print("Characteristic resistance: ",CHARACTERISTIC_RESISTANCE)
-                    print(f"Properties of characteristic: {CHARACTERISTIC_RESISTANCE.properties}")
 
 
-                if("notify" in characteristic.properties and characteristic.uuid == characteristic_speed_uuid):
-                    CHARACTERISTIC_SPEED = characteristic
-                    print("Characteristic speed: ",CHARACTERISTIC_SPEED)  
-                    print(f"Properties of characteristic: {CHARACTERISTIC_SPEED.properties}")
+    while True:
+        try: 
 
-            # Start receiving notifications
-            await client.start_notify(CHARACTERISTIC_SPEED, notify_speed_callback)
+            DEVICE_ADDRESS = await find_device_by_name()
+            SERVICE = ""
+            CHARACTERISTIC_RESISTANCE = ""
+            CHARACTERISTIC_SPEED = ""
 
-            # Run the write task concurrently
-            write_task = asyncio.create_task(write_resistance(client=client, characteristic= CHARACTERISTIC_RESISTANCE, resistance_value= 10))
-                #write_to_characteristic(client, CHARACTERISTIC_RESISTANCE))
+            async with BleakClient(DEVICE_ADDRESS) as client:
+                if not client.is_connected:
+                    print("Failed to connect to device.")
+                    return
+                
+                for service in client.services:
 
-            try:
-                await write_task  # Keep the main function running
-            except asyncio.CancelledError:
-                # Stop notifications on exit
-                await client.stop_notify(CHARACTERISTIC_SPEED)
-                await write_task  # Ensure the write task ends
+                    if (service.uuid == service_uuid):
+                        SERVICE = service    
+
+                if (SERVICE != ""):
+
+                    for characteristic in SERVICE.characteristics:
+
+                        if("write" in characteristic.properties and characteristic.uuid == characteristic_resistance_uuid):
+                            CHARACTERISTIC_RESISTANCE = characteristic
+                            print("Characteristic resistance: ",CHARACTERISTIC_RESISTANCE)
+                            print(f"Properties of characteristic: {CHARACTERISTIC_RESISTANCE.properties}")
+
+
+                        if("notify" in characteristic.properties and characteristic.uuid == characteristic_speed_uuid):
+                            CHARACTERISTIC_SPEED = characteristic
+                            print("Characteristic speed: ",CHARACTERISTIC_SPEED)  
+                            print(f"Properties of characteristic: {CHARACTERISTIC_SPEED.properties}")
+
+                    # Start receiving notifications
+                    await client.start_notify(CHARACTERISTIC_SPEED, notify_speed_callback)
+
+                    # Run the write task concurrently
+                    write_task = asyncio.create_task(write_resistance(client=client, characteristic= CHARACTERISTIC_RESISTANCE))
+                        #write_to_characteristic(client, CHARACTERISTIC_RESISTANCE))
+
+                    try:
+                        await write_task  # Keep the main function running
+                    except asyncio.CancelledError:
+                        # Stop notifications on exit
+                        await client.stop_notify(CHARACTERISTIC_SPEED)
+                        await write_task  # Ensure the write task ends
+        except Exception: 
+            time.sleep(3)
+            print("Trying to connect again...")
 
 # Run the main event loop
 async def read_and_send_udp():
@@ -170,17 +186,42 @@ async def read_and_send_udp():
 
     while True:
         # Reading from the UDP socket
+
         try:
-
-            data = await asyncio.get_event_loop().sock_recv(udp_socket, 47)
-            resistance_data = json.loads(data.decode())
-            resistance_value = int(resistance_data["diretoResistance"])
-
-            print("New Resistance from UDP: " + str(resistance_value))
-            resistance_queue = resistance_value
+            udp_incline_data = 0
+            while True:
+                try:
+                    udp_incline_data, addr = udp_socket.recvfrom(47)
+                    sender_ip, sender_port = addr
+                    print(f"Received message: {udp_incline_data.decode()} from {sender_ip}:{sender_port}")
+                    incline_value = json.loads(udp_incline_data.decode())
+                    incline_value = int(incline_value["diretoResistance"])  
+                    resistance_queue = incline_value
+                except BlockingIOError:
+                    break
 
         except BlockingIOError:
-            pass
+            time.sleep(0.01)  # 
+
+        '''try:
+
+            udp_incline_data, addr = udp_socket.recvfrom(47)
+            sender_ip, sender_port = addr
+            print(f"Received message: {udp_incline_data.decode()} from {sender_ip}:{sender_port}")
+            incline_value = json.loads(udp_incline_data.decode())
+            incline_value = int(incline_value["diretoResistance"])  
+            resistance_queue = incline_value
+
+            data = udp_socket.sock_recv(udp_socket, 47)
+            resistance_data = json.loads(data.decode())
+            #incline = int(resistance_data["rizerIncline"])
+            #print("New incline from UDP: " + str(incline))
+            resistance_value = int(resistance_data["diretoResistance"])
+            print("New Resistance from UDP: " + str(resistance_value))
+            
+
+        except BlockingIOError:
+            pass'''
 
         # Sending data if something is in the send_queue
         try:
@@ -191,7 +232,7 @@ async def read_and_send_udp():
                 speed_queue = None
             
                 #speed_to_send = send_speed_queue.get_nowait()
-                print("Sending speed: " + str(speed_to_send))
+                #print("Sending speed: " + str(speed_to_send))
                 udp_socket.sendto(str(speed_to_send).encode(), ("127.0.0.1", 1111))
 
         except asyncio.QueueEmpty:
