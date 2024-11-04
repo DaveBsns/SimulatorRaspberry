@@ -1,4 +1,6 @@
 import asyncio
+import json
+import socket
 import struct
 from bleak import BleakClient, BleakScanner
 
@@ -22,6 +24,9 @@ CHARACTERISTIC_SPEED = ""
 
 # Set Processing queues
 
+speed_queue = None
+resistance_queue = None
+
 async def find_device_by_name():
     global device_name
     print("Scanning for BLE devices...")
@@ -40,6 +45,9 @@ async def notify_resistance_callback(self, sender):
 
 async def write_resistance(client, characteristic, resistance_value):
 
+    global resistance_queue
+    global speed_queue
+
     while True:
 
         try:
@@ -49,12 +57,14 @@ async def write_resistance(client, characteristic, resistance_value):
 
         try:
 
-            resistance_value = min(resistance_value, 100)
-            resistance_value = max(resistance_value, 0)
-            print("write Resistance: ", resistance_value)
-            resistance_value = int(resistance_value)
-            #resistance_value = 100 - resistance_value
-            await client.write_gatt_char(characteristic, bytearray([0x04, resistance_value]))
+            if (resistance_queue != None):
+                resistance_value = resistance_queue
+                resistance_queue = None
+                resistance_value = min(resistance_value, 100)
+                resistance_value = max(resistance_value, 0)
+                print("write Resistance: ", resistance_value)
+                resistance_value = int(resistance_value)
+                await client.write_gatt_char(characteristic, bytearray([0x04, resistance_value]))
 
         except ValueError:
             print("Invalid input. Please enter a number between 1 and 100.")
@@ -67,6 +77,8 @@ async def write_resistance(client, characteristic, resistance_value):
 
     
 async def notify_speed_callback(sender, data):
+    global resistance_queue
+    global speed_queue
    # global speed_queue
     # Convert the byte data to the speed value
     #speed_value = int.from_bytes(data, byteorder='little')  # Adjust based on your data format
@@ -82,6 +94,8 @@ async def notify_speed_callback(sender, data):
 
     normalized_output_speed = normalize_speed_value(output, 0.0, 2.5)
     print(f"Received speed : {normalized_output_speed}")
+    speed_queue = normalized_output_speed
+
 
 def normalize_speed_value(value, min_val, max_val):
     range_val = max_val - min_val
@@ -89,7 +103,7 @@ def normalize_speed_value(value, min_val, max_val):
     return normalized_value
 
 # Main async function: Manages connection and tasks
-async def main():
+async def main_ble():
 
     global service_uuid
     global characteristic_resistance_uuid
@@ -138,6 +152,61 @@ async def main():
                 # Stop notifications on exit
                 await client.stop_notify(CHARACTERISTIC_SPEED)
                 await write_task  # Ensure the write task ends
+
+# Run the main event loop
+async def read_and_send_udp():
+
+    UDP_IP_FROM_MASTER_COLLECTOR = "127.0.0.3"
+    RECEIVE_FROM_MASTER_COLLECTOR_PORT = 2225
+
+    global resistance_queue
+    global speed_queue
+
+    udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    udp_socket.bind((UDP_IP_FROM_MASTER_COLLECTOR, RECEIVE_FROM_MASTER_COLLECTOR_PORT))
+    udp_socket.setblocking(False)
+
+    print("UDP socket is listening...")
+
+    while True:
+        # Reading from the UDP socket
+        try:
+
+            data = await asyncio.get_event_loop().sock_recv(udp_socket, 47)
+            resistance_data = json.loads(data.decode())
+            resistance_value = int(resistance_data["diretoResistance"])
+
+            print("New Resistance from UDP: " + str(resistance_value))
+            resistance_queue = resistance_value
+
+        except BlockingIOError:
+            pass
+
+        # Sending data if something is in the send_queue
+        try:
+            # Non-blocking get from the queue
+            if (speed_queue != None):
+
+                speed_to_send = speed_queue
+                speed_queue = None
+            
+                #speed_to_send = send_speed_queue.get_nowait()
+                print("Sending speed: " + str(speed_to_send))
+                udp_socket.sendto(str(speed_to_send).encode(), ("127.0.0.1", 1111))
+
+        except asyncio.QueueEmpty:
+            # Queue is empty, nothing to send
+            pass
+
+        await asyncio.sleep(0.1)  
+
+
+async def main():
+    await asyncio.gather(
+        main_ble(),
+        read_and_send_udp(),
+    )
+    #await connect_and_listen()
 
 # Run the main event loop
 asyncio.run(main())
