@@ -159,7 +159,7 @@ if __name__ == "__main__":
     # ports to receive data from actuators and sensors
     UDP_PORT_DIRETO = 1111
     UDP_PORT_RIZER = 2222
-    UDP_PORT_ROTATION = 5445
+    UDP_PORT_ROTATION = 7778
     UDP_PORT_ROLL = 6666
     UDP_PORT_BRAKE = 7777
     UDP_PORT_BNO = 8888
@@ -209,7 +209,8 @@ if __name__ == "__main__":
                 # print("SPEED: ", speed_value)
                 data_sender.collect_speed(speed_value)
             elif sock is udp_rotation_socket:
-                rotation_value = data.decode()
+                rotation_value = json.loads(data.decode())
+                rotation_value = rotation_value["sensor_value"]
                 # print("ROTATION: ", rotation_value)
                 data_sender.collect_rotation(rotation_value)
             elif sock is udp_brake_socket:
