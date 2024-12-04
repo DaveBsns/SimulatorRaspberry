@@ -179,11 +179,7 @@ if __name__ == "__main__":
     udp_steering_angle_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     udp_steering_angle_socket.bind((UDP_ESP_IP, UPD_PORT_STEERING_ANGLE))
 
-    # udp_unity_receive_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    # udp_unity_receive_socket.bind((UDP_IP_UNITY_RECEIVE, UDP_PORT_UNITY_RECEIVE))
 
-    
-    
     while True:
         # print("udp_direto_socket: ", udp_direto_socket)
         data_sender.send_unity_data_udp(data_sender.speed_value, data_sender.steering_value, data_sender.brake_value, data_sender.bno_value, data_sender.roll_value, data_sender.steering_angle)
