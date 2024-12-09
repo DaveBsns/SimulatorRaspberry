@@ -53,6 +53,7 @@ async def write_resistance(client, characteristic):
 
         try:
             await client.start_notify(characteristic, notify_resistance_callback) # characteristic.uuid  
+        
         except Exception as e:
             print("Error: ", e) 
 
@@ -71,14 +72,14 @@ async def write_resistance(client, characteristic):
                 
                 resistance_value = int(resistance_value)
                 print("write Resistance: ", resistance_value)
+                
                 await client.write_gatt_char(characteristic, bytearray([0x04, resistance_value]))
                 await asyncio.sleep(0.25)
 
         except ValueError:
             print("Invalid input. Please enter a number between 1 and 100.")
 
-        try:
-            await client.stop_notify(characteristic.uuid)
+
         except Exception as e:
             print("Error: ", e) 
 
@@ -116,8 +117,6 @@ async def main_ble():
     global service_uuid
     global characteristic_resistance_uuid
     global characteristic_speed_uuid
-
-
 
     while True:
         try: 
@@ -165,6 +164,7 @@ async def main_ble():
                         # Stop notifications on exit
                         await client.stop_notify(CHARACTERISTIC_SPEED)
                         await write_task  # Ensure the write task ends
+                        
         except Exception: 
             time.sleep(3)
             print("Trying to connect again...")
@@ -188,8 +188,11 @@ async def read_and_send_udp():
         # Reading from the UDP socket
 
         try:
+            
             udp_incline_data = 0
+            
             while True:
+                
                 try:
                     udp_incline_data, addr = udp_socket.recvfrom(47)
                     sender_ip, sender_port = addr
