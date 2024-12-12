@@ -232,5 +232,5 @@ if __name__ == "__main__":
             elif sock is udp_steering_angle_socket:
                 steering_value = json.loads(data.decode())
                 # print("Roll_Value: ", roll_value)
-                steering_value = steering_value["euler_h"]
+                steering_value = steering_value["angle"]
                 data_sender.collect_steering_angle(steering_value)
