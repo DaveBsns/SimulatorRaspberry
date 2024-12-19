@@ -10,9 +10,10 @@ unsigned int localUdpPort = 7778;
 WiFiUDP udp;
 
 // SENSOR
-const int HALL_PIN = 32;
+const int SPEED_PIN = 32;
+const int PEDAL_PIN = 33;
 const int UDP_DELAY_MS = 20;
-const int N_MAGNETS = 4;
+const int N_MAGNETS = 6;  // TODO: different amount of magnets for pedal and backwheel
 const int AVG_SIZE = 50;  // Sliding average window size
 const int AVG_DELAY = UDP_DELAY_MS * AVG_SIZE;
 
@@ -23,10 +24,15 @@ struct rotationMetrics {
   float speed = 0;
   float acceleration = 0;
 };
-rotationMetrics metrics;
+rotationMetrics speed_metrics;
+rotationMetrics pedal_metrics;
 
-void IRAM_ATTR isr() {
-  metrics.count++;
+void IRAM_ATTR speed_isr() {
+  speed_metrics.count++;
+}
+
+void IRAM_ATTR pedal_isr() {
+  pedal_metrics.count++;
 }
 
 void setup() {
@@ -34,8 +40,11 @@ void setup() {
   WiFi.hostname("Rotation_ESP");
   WiFi.begin(ssid, password);
 
-  pinMode(HALL_PIN, INPUT_PULLUP);
-  attachInterrupt(HALL_PIN, isr, FALLING);
+  pinMode(SPEED_PIN, INPUT_PULLUP);
+  attachInterrupt(SPEED_PIN, speed_isr, FALLING);
+
+  pinMode(PEDAL_PIN, INPUT_PULLUP);
+  attachInterrupt(PEDAL_PIN, pedal_isr, FALLING);
 
   Serial.begin(115200);
 
@@ -52,17 +61,20 @@ void setup() {
 void loop() {
   // Calculate speed
   for (int k=AVG_SIZE-1; k>0; k--) {
-    metrics.counts[k] = metrics.counts[k-1];
+    speed_metrics.counts[k] = speed_metrics.counts[k-1];
+    pedal_metrics.counts[k] = pedal_metrics.counts[k-1];
   }
-  metrics.counts[0] = metrics.count;
-  metrics.speed = (1000.0 * (metrics.counts[0] - metrics.counts[AVG_SIZE-1])) / float(AVG_DELAY * N_MAGNETS);
+  speed_metrics.counts[0] = speed_metrics.count;
+  pedal_metrics.counts[0] = pedal_metrics.count;
+  speed_metrics.speed = (1000.0 * (speed_metrics.counts[0] - speed_metrics.counts[AVG_SIZE-1])) / float(AVG_DELAY * N_MAGNETS);
+  pedal_metrics.speed = (1000.0 * (pedal_metrics.counts[0] - pedal_metrics.counts[AVG_SIZE-1])) / float(AVG_DELAY * N_MAGNETS);
   
   // Build JSON message
   StaticJsonDocument<500> doc;
   String jsonStr;
   doc["sensor"] = "Rotation";
-  doc["sensor_value"] = metrics.speed;
-  doc["count"] = metrics.count;
+  doc["speed"] = speed_metrics.speed;
+  doc["pedal"] = pedal_metrics.speed;
   serializeJson(doc, jsonStr);
 
   // Read UDP messages
