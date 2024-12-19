@@ -13,26 +13,48 @@ WiFiUDP udp;
 const int SPEED_PIN = 32;
 const int PEDAL_PIN = 33;
 const int UDP_DELAY_MS = 20;
-const int N_MAGNETS = 6;  // TODO: different amount of magnets for pedal and backwheel
-const int AVG_SIZE = 50;  // Sliding average window size
-const int AVG_DELAY = UDP_DELAY_MS * AVG_SIZE;
+const int SPEED_MAGNETS = 6;
+const int PEDAL_MAGNETS = 4;
 
 // TODO: deal with integer overflows
 struct rotationMetrics {
-  int count = 0;
-  int counts[AVG_SIZE] = {0};
-  float speed = 0;
-  float acceleration = 0;
+  uint64_t time_difference = 0;
+  uint64_t time = 0;
 };
 rotationMetrics speed_metrics;
 rotationMetrics pedal_metrics;
 
 void IRAM_ATTR speed_isr() {
-  speed_metrics.count++;
+  int current_time = micros();
+  speed_metrics.time_difference = current_time - speed_metrics.time;
+  speed_metrics.time = current_time;
 }
 
 void IRAM_ATTR pedal_isr() {
-  pedal_metrics.count++;
+  int current_time = micros();
+  pedal_metrics.time_difference = current_time - pedal_metrics.time;
+  pedal_metrics.time = current_time;
+}
+
+float calculate_speed(rotationMetrics metrics, int n_magnets) {
+  uint64_t time = micros();
+  uint64_t time_difference = 0;
+
+  // reduce speed gradually if no more interrupts are occuring
+  if (time - metrics.time > metrics.time_difference) {
+    time_difference = time - metrics.time;
+  }
+  else {
+    time_difference = metrics.time_difference;
+  }
+
+  float speed = 1000000.0 / (time_difference * n_magnets);
+
+  if (speed < 0.01) {
+    speed = 0;
+  }
+
+  return speed;
 }
 
 void setup() {
@@ -60,21 +82,15 @@ void setup() {
 
 void loop() {
   // Calculate speed
-  for (int k=AVG_SIZE-1; k>0; k--) {
-    speed_metrics.counts[k] = speed_metrics.counts[k-1];
-    pedal_metrics.counts[k] = pedal_metrics.counts[k-1];
-  }
-  speed_metrics.counts[0] = speed_metrics.count;
-  pedal_metrics.counts[0] = pedal_metrics.count;
-  speed_metrics.speed = (1000.0 * (speed_metrics.counts[0] - speed_metrics.counts[AVG_SIZE-1])) / float(AVG_DELAY * N_MAGNETS);
-  pedal_metrics.speed = (1000.0 * (pedal_metrics.counts[0] - pedal_metrics.counts[AVG_SIZE-1])) / float(AVG_DELAY * N_MAGNETS);
+  float rotation_speed = calculate_speed(speed_metrics, SPEED_MAGNETS);
+  float pedal_speed = calculate_speed(pedal_metrics, PEDAL_MAGNETS);
   
   // Build JSON message
   StaticJsonDocument<500> doc;
   String jsonStr;
   doc["sensor"] = "Rotation";
-  doc["speed"] = speed_metrics.speed;
-  doc["pedal"] = pedal_metrics.speed;
+  doc["speed"] = rotation_speed;
+  doc["pedal"] = pedal_speed;
   serializeJson(doc, jsonStr);
 
   // Read UDP messages
