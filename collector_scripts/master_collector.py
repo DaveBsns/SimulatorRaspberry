@@ -3,6 +3,10 @@ import socket
 import select
 import json
 import time
+# import logging
+# logging.basicConfig(level=logging.DEBUG, 
+#                     format='%(asctime)s %(levelname)-8s %(message)s',
+#                     filename='C:/Users/unity/Desktop/SimulatorRaspberry/collector_scripts/master_collector.log', force=True)
 
 class DataSender:
     def __init__(self):
@@ -59,6 +63,9 @@ class DataSender:
         print(data)
         # Convert dictionary to JSON string
         json_data = json.dumps(data)
+        
+        # Log to file
+        # logging.debug(data)
 
         # Create a UDP socket
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
