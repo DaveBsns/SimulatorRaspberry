@@ -13,7 +13,7 @@ WiFiUDP udp;
 const int SPEED_PIN = 32;
 const int PEDAL_PIN = 33;
 const int UDP_DELAY_MS = 20;
-const int SPEED_MAGNETS = 6;
+const int SPEED_MAGNETS = 5;
 const int PEDAL_MAGNETS = 4;
 
 // TODO: deal with integer overflows
