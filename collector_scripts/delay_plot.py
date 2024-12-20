@@ -2,7 +2,11 @@ from matplotlib import pyplot as plt
 import ast
 from datetime import datetime
 
-def get_log_dict_v1(line):
+def get_log_dict_v1(line: str) -> tuple[float, dict] | None:
+    """
+    Reads a dictonary from a line of a logfile with format: <%Y-%m-%d %H:%M:%S,%f> <LOGLEVEL> <DICT> 
+    Returns: tuple[unix timestamp, dictonary]
+    """
     parts = line.split(" ", 3)
 
     if len(parts) != 4:
@@ -20,7 +24,11 @@ def get_log_dict_v1(line):
     
     return timestamp_unix, content_dict
 
-def get_log_dict_v2(line):
+def get_log_dict_v2(line: str) -> tuple[float, dict] | None:
+    """
+    Reads a dictonary from a line of a logfile with format: <LOGLEVEL>:<LOGGER>:<DICT> 
+    Returns: tuple[unix timestamp, dictonary]
+    """
     parts = line.split(":", 2)
 
     if len(parts) != 3:
