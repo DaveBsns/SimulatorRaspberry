@@ -10,6 +10,7 @@ class DataSender:
         self.brake_value = 0
         self.bno_value = 0
         self.roll_value = 0
+        self.usingOldVersion = 0
         self.udp_unity_send_ip = "127.0.0.2" # IP of the computer running Unity (just the localhost ip if the script is running on the same computer than the simulation)
         # self.udp_unity_send_ip = "10.30.77.221" # IP of the computer running Unity
         self.udp_unity_send_port = 1337
@@ -29,7 +30,7 @@ class DataSender:
     def collect_roll(self, roll):
         self.roll_value = roll
 
-    def send_unity_data_udp(self, speed_data, steering_data, brake_data, bno_data, roll_data):
+    def send_unity_data_udp(self, speed_data, steering_data, brake_data, bno_data, roll_data, usingOldVesion):
         
 
         # Create a dictionary with the required parameters
@@ -38,7 +39,8 @@ class DataSender:
             "rizerSteering": float(steering_data),
             "espBno": float(bno_data),
             "espBrake": float(brake_data),
-            "espRoll": float(roll_data)
+            "espRoll": float(roll_data),
+            "usingOldVersion": int(usingOldVesion)
         }
         print(data)
         # Convert dictionary to JSON string
@@ -145,7 +147,7 @@ if __name__ == "__main__":
     
     while True:
         # print("udp_direto_socket: ", udp_direto_socket)
-        data_sender.send_unity_data_udp(data_sender.speed_value, data_sender.steering_value, data_sender.brake_value, data_sender.bno_value, data_sender.roll_value)
+        data_sender.send_unity_data_udp(data_sender.speed_value, data_sender.steering_value, data_sender.brake_value, data_sender.bno_value, data_sender.roll_value, usingOldVesion = 1)
         readable, _, _ = select.select([udp_rizer_socket, udp_direto_socket, udp_brake_socket, udp_bno_socket, udp_roll_socket], [], [])
         
         for sock in readable:
