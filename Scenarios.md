@@ -42,7 +42,7 @@ Scenario 4: Foggy night ride in the city
 * Fog makes vision difficult
 * Covers 6 Use Case Actions
 
-Scenario 5: Fun adventure ride in the forest
+Scenario 5: Adventure ride in the forest
 * Hilly terrain
 * Fog
 * Forest
