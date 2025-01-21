@@ -2,11 +2,20 @@ import asyncio
 import socket
 import select
 import json
+import time
+# import logging
+# logging.basicConfig(level=logging.DEBUG, 
+#                     format='%(asctime)s %(levelname)-8s %(message)s',
+#                     filename='C:/Users/unity/Desktop/SimulatorRaspberry/collector_scripts/master_collector.log', force=True)
+
 
 class DataSender:
     def __init__(self):
         self.speed_value = 0
+        self.rotation_value = 0
+        self.pedal_speed = 0
         self.steering_value = 0
+        self.steering_angle = 0
         self.brake_value = 0
         self.bno_value = 0
         self.roll_value = 0
@@ -17,6 +26,12 @@ class DataSender:
     def collect_speed(self, speed):
         self.speed_value = speed
 
+    def collect_rotation(self, rotation):
+        self.rotation_value = rotation
+        
+    def collect_pedal(self, pedal_speed):
+        self.pedal_speed = pedal_speed
+
     def collect_steering(self, steering):
         self.steering_value = steering
     
@@ -25,24 +40,33 @@ class DataSender:
     
     def collect_bno(self, bno):
         self.bno_value = bno
+
+    def collect_steering_angle(self, steering_angle):
+        self.steering_angle = steering_angle
+
     
     def collect_roll(self, roll):
         self.roll_value = roll
 
-    def send_unity_data_udp(self, speed_data, steering_data, brake_data, bno_data, roll_data):
+    def send_unity_data_udp(self, speed_data, rotation_data, pedal_speed, steering_data, brake_data, bno_data, roll_data, steering_angle):
         
-
         # Create a dictionary with the required parameters
         data = {
             "diretoSpeed": float(speed_data),
+            "rotationValue": float(rotation_data),
+            "pedalSpeed": float(pedal_speed),
             "rizerSteering": float(steering_data),
             "espBno": float(bno_data),
             "espBrake": float(brake_data),
-            "espRoll": float(roll_data)
+            "espRoll": float(roll_data),
+            "steeringAngle": float(steering_angle)
         }
         print(data)
         # Convert dictionary to JSON string
         json_data = json.dumps(data)
+        
+        # Log to file
+        # logging.debug(data)
 
         # Create a UDP socket
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
@@ -117,9 +141,11 @@ if __name__ == "__main__":
     # ports to receive data from actuators and sensors
     UDP_PORT_DIRETO = 1111
     UDP_PORT_RIZER = 2222
+    UDP_PORT_ROTATION = 7778
     UDP_PORT_ROLL = 6666
     UDP_PORT_BRAKE = 7777
     UDP_PORT_BNO = 8888
+    UPD_PORT_STEERING_ANGLE = 8778
     # UDP_PORT_UNITY_RECEIVE = 12345 # Port to receive data from unity such as the ble fan data
 
 
@@ -128,6 +154,9 @@ if __name__ == "__main__":
 
     udp_direto_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     udp_direto_socket.bind((UDP_IP, UDP_PORT_DIRETO))
+
+    udp_rotation_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    udp_rotation_socket.bind((UDP_ESP_IP, UDP_PORT_ROTATION))
 
     udp_brake_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     udp_brake_socket.bind((UDP_ESP_IP, UDP_PORT_BRAKE))
@@ -138,6 +167,9 @@ if __name__ == "__main__":
     udp_roll_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     udp_roll_socket.bind((UDP_ESP_IP, UDP_PORT_ROLL))
 
+    udp_steering_angle_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    udp_steering_angle_socket.bind((UDP_ESP_IP, UPD_PORT_STEERING_ANGLE))
+
     # udp_unity_receive_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     # udp_unity_receive_socket.bind((UDP_IP_UNITY_RECEIVE, UDP_PORT_UNITY_RECEIVE))
 
@@ -145,9 +177,9 @@ if __name__ == "__main__":
     
     while True:
         # print("udp_direto_socket: ", udp_direto_socket)
-        data_sender.send_unity_data_udp(data_sender.speed_value, data_sender.steering_value, data_sender.brake_value, data_sender.bno_value, data_sender.roll_value)
-        readable, _, _ = select.select([udp_rizer_socket, udp_direto_socket, udp_brake_socket, udp_bno_socket, udp_roll_socket], [], [])
-        
+        data_sender.send_unity_data_udp(data_sender.speed_value, data_sender.rotation_value, data_sender.pedal_speed, data_sender.steering_value, data_sender.brake_value, data_sender.bno_value, data_sender.roll_value, data_sender.steering_angle)
+        readable, _, _ = select.select([udp_rizer_socket, udp_rotation_socket, udp_direto_socket, udp_brake_socket, udp_bno_socket, udp_roll_socket, udp_steering_angle_socket], [], [])
+
         for sock in readable:
             data, addr = sock.recvfrom(1024)
             if sock is udp_rizer_socket:
@@ -158,6 +190,13 @@ if __name__ == "__main__":
                 speed_value = data.decode()
                 # print("SPEED: ", speed_value)
                 data_sender.collect_speed(speed_value)
+            elif sock is udp_rotation_socket:
+                rotation_dict = json.loads(data.decode())
+                rotation_value = rotation_dict["speed"]
+                pedal_speed = rotation_dict["pedal"]
+                # print("ROTATION: ", rotation_value)
+                data_sender.collect_rotation(rotation_value)
+                data_sender.collect_pedal(pedal_speed)
             elif sock is udp_brake_socket:
                 brake_value = json.loads(data.decode())
                 brake_value = brake_value["sensor_value"]
@@ -173,12 +212,8 @@ if __name__ == "__main__":
                 # print("Roll_Value: ", roll_value)
                 roll_value = roll_value["sensor_value"]
                 data_sender.collect_roll(roll_value)
-            '''
-            elif sock is udp_unity_receive_socket:
-                json_data = data.decode('utf-8')  # Decode bytes to string
-                # value = json.loads(data.decode())
-                unity_values = json.loads(json_data)
-                ble_fan_value = unity_values["bleFan"]
-                print("ble fan from unity: ", ble_fan_value)
-            '''
-
+            elif sock is udp_steering_angle_socket:
+                steering_value = json.loads(data.decode())
+                # print("Roll_Value: ", roll_value)
+                steering_value = steering_value["angle"]
+                data_sender.collect_steering_angle(steering_value)
