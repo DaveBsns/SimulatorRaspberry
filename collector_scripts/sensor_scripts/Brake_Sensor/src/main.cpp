@@ -3,181 +3,99 @@
 #include <WiFiUdp.h>
 #include <ArduinoJson.h>
 
-// SENSOR
-const int HALL_PIN = 32;
+// HALL EFFECT SENSOR
+const int HALL_PIN = 32; // Pin connected to the brake sensor
 
-// WIFI
-const char *ssid = "Bicycle_Simulator_Network";
-const char *password = "17701266";
-unsigned int localUdpPort = 7777;
+// WIFI CONFIGURATION
+const char *ssid = "Bicycle_Simulator_Network"; // WiFi network SSID
+const char *password = "17701266";             // WiFi network password
+unsigned int localUdpPort = 7777;              // UDP port for communication
 
-// SWITCH
-const int switchPin = 18;
-const int ledPin = 19;
-int switchState = 0;
-int delayTime = 1000;
+// SWITCH AND LED CONFIGURATION
+const int switchPin = 18;  // Pin connected to the control switch
+const int ledPin = 19;     // Pin connected to the indicator LED
+int switchState = 0;       // Current state of the switch
+int delayTime = 1000;      // Delay time for the main loop
 
-
-WiFiUDP udp;
+WiFiUDP udp; // UDP instance for communication
 
 void setup()
 {
+  // SWITCH AND LED SETUP
+  pinMode(switchPin, INPUT_PULLUP); // Configure switch pin as input with pull-up
+  pinMode(ledPin, OUTPUT);          // Configure LED pin as output
+  digitalWrite(ledPin, LOW);        // Turn off the LED initially
 
-  // SWITCH
-  pinMode(switchPin, INPUT_PULLUP);
-  // Set the LED pin as output
-  pinMode(ledPin, OUTPUT);
-  // Turn off the LED initially
-  digitalWrite(ledPin, LOW);
+  // HALL EFFECT SENSOR SETUP
+  pinMode(HALL_PIN, INPUT_PULLUP);  // Configure the hall effect sensor pin as input
+  delay(1000);                      // Initial delay for stability
 
-
-  // SENSOR
-  pinMode(HALL_PIN, INPUT_PULLUP);
-  delay(1000);
-
-
-  // WIFI
-  WiFi.hostname("Brake_ESP");
-
-  Serial.begin(115200);
-  WiFi.begin(ssid, password);
+  // WIFI SETUP
+  WiFi.hostname("Brake_ESP");       // Set the device hostname
+  Serial.begin(115200);             // Initialize serial communication for debugging
+  WiFi.begin(ssid, password);       // Begin WiFi connection
 
   while (WiFi.status() != WL_CONNECTED)
   {
-    delay(1000);
+    delay(1000);                    // Retry every second until connected
     Serial.println("Connecting with WiFi");
   }
 
   Serial.println("Connection with WiFi successful");
-  udp.begin(localUdpPort);
+  udp.begin(localUdpPort);          // Initialize UDP communication
 }
 
 void loop()
 {
-
-  int sensorValue = analogRead(HALL_PIN); // read Sensor value
-  StaticJsonDocument<500> doc;
-
+  // READ HALL EFFECT SENSOR VALUE
+  int sensorValue = analogRead(HALL_PIN); // Read the sensor value
+  StaticJsonDocument<500> doc;           // Create a JSON document for data transmission
   String jsonStr;
-  doc["sensor"] = "Brake";
-  doc["sensor_value"] = sensorValue;
+
+  // Populate JSON with sensor data
+  doc["sensor"] = "Brake";          // Identify this as the brake sensor
+  doc["sensor_value"] = sensorValue; // Current brake sensor value
   Serial.print("Sensor Value: ");
   Serial.println(sensorValue);
 
-  serializeJson(doc, jsonStr);
+  serializeJson(doc, jsonStr);      // Serialize JSON data into a string
 
-  // Read UDP messages
+  // READ INCOMING UDP MESSAGES
   int packetSize = udp.parsePacket();
   if (packetSize)
   {
     char packetBuffer[255];
-    udp.read(packetBuffer, packetSize);
+    udp.read(packetBuffer, packetSize); // Read the incoming packet
 
     Serial.print("Received message: ");
-    Serial.println(packetBuffer);
+    Serial.println(packetBuffer);      // Print the received message
   }
 
-
-
-
-
+  // SEND SENSOR DATA BASED ON SWITCH STATE
   if (switchState == 0) {
-    if (sensorValue > 10) {
-      udp.beginPacket("192.168.0.101", 7777);
-      //udp.beginPacket("192.168.1.104", 7777);
+    if (sensorValue > 10) {             // Send data if sensor value exceeds threshold
+      udp.beginPacket("192.168.0.101", 7777); // Send to the main VR PC
       udp.print(jsonStr);
       udp.endPacket();
     }
   } else {
-    udp.beginPacket("192.168.0.101", 7777);
-    //udp.beginPacket("192.168.1.104", 7777);
+    udp.beginPacket("192.168.0.101", 7777); // Always send data when switch is active
     udp.print(jsonStr);
     udp.endPacket();
   }
 
-  switchState = digitalRead(switchPin);
+  // UPDATE SWITCH STATE AND LED
+  switchState = digitalRead(switchPin); // Read the current switch state
 
-  // Control the LED based on the switch state
   if (switchState == LOW) {
     Serial.println("Switch is pressed - LED ON");
-    digitalWrite(ledPin, HIGH);  // Turn the LED on
-    delayTime = 50;
+    digitalWrite(ledPin, HIGH);  // Turn the LED on when switch is pressed
+    delayTime = 50;              // Shorten delay for faster response
   } else {
     Serial.println("Switch is not pressed - LED OFF");
-    digitalWrite(ledPin, LOW);   // Turn the LED off
-    delayTime = 1000;
+    digitalWrite(ledPin, LOW);   // Turn the LED off when switch is not pressed
+    delayTime = 1000;            // Lengthen delay for slower updates
   }
 
-  delay(delayTime);
-
+  delay(delayTime);              // Wait for the configured delay time
 }
-
-/*#include <WiFi.h>
-#include <WiFiUdp.h>
-#include <ArduinoJson.h>
-
-// WIFI
-const char *ssid = "Arduino2"; //"Bicycle_Simulator_Network";
-const char *password = "pommespanzer"; //"17701266";
-unsigned int localUdpPort = 7777; // Must match the sending ESP32's port
-
-WiFiUDP udp;
-
-void setup() {
-  // Initialize serial communication
-  Serial.begin(115200);
-
-  // Connect to Wi-Fi
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(1000);
-    Serial.println("Connecting to WiFi...");
-  }
-
-  Serial.println("WiFi connected.");
-  Serial.print("IP Address: ");
-  Serial.println(WiFi.localIP());
-
-  // Start UDP listener
-  udp.begin(localUdpPort);
-  Serial.println("UDP listener started.");
-}
-
-void loop() {
-  // Check if a UDP packet has been received
-  int packetSize = udp.parsePacket();
-  if (packetSize) {
-    char packetBuffer[255]; // Buffer for incoming data
-    int len = udp.read(packetBuffer, 255);
-    if (len > 0) {
-      packetBuffer[len] = 0; // Null-terminate the string
-    }
-
-    Serial.print("Received packet: ");
-    Serial.println(packetBuffer);
-
-    // Parse the incoming JSON data
-    StaticJsonDocument<500> doc;
-    DeserializationError error = deserializeJson(doc, packetBuffer);
-
-    if (error) {
-      Serial.print("Failed to parse JSON: ");
-      Serial.println(error.c_str());
-      return;
-    }
-
-    // Extract the sensor data
-    const char* sensor = doc["sensor"];
-    int sensorValue = doc["sensor_value"];
-
-    Serial.print("Sensor: ");
-    Serial.println(sensor);
-    Serial.print("Sensor Value: ");
-    Serial.println(sensorValue);
-  }
-
-  // Short delay to avoid overloading the serial output
-  delay(100);
-}*/
-
-

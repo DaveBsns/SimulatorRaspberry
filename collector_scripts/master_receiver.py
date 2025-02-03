@@ -29,7 +29,7 @@ if __name__ == "__main__":
                     print(unity_ble_incline, unity_ble_fan_speed)
                     data_receiver.send_udp_data_to_rizer(unity_ble_incline)
                     data_receiver.send_udp_data_to_headwind(unity_ble_fan_speed)
-                    data_receiver.send_udp_data_to_direto(unity_ble_resistance)
+                    data_receiver.send_udp_data_to_direto(unity_ble_incline)
 
             except Exception as e:
                 print(f"Error while receiving UDP data: {e}")
