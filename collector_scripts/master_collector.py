@@ -76,47 +76,87 @@ class DataSender:
 # This class might be to be located in the headwind script
 class DataReceiver:
     def __init__(self):
-        # self.udp_unity_receive_ip = "127.0.0.1"
-        # self.udp_unity_receive_port = 12345
-        self.udp_unity_receive_socket = None
         self.ble_fan_speed = 0
+        self.ble_incline = 40
+        self.ble_resistance = 0
+        self.ble_resistance = 0
+        self.send_to_actuator_ip = "127.0.0.3"
+        self.send_to_rizer_port = 2223
+        self.send_to_headwind_port = 2224
+        self.send_to_direto_port = 2225
     
-    
+    def set_ble_fan_speed(self, fan_speed):
+        self.ble_fan_speed = fan_speed
+
+    def set_ble_incline(self, incline_data):
+        self.ble_incline = incline_data
+        print("Self incline data: ", self.ble_incline)
+
     def get_fan_speed(self):
+        #global ble_fan_speed
         print("Self ble fan speed: ", self.ble_fan_speed)
         return self.ble_fan_speed
     
-    def open_udp_socket(self):
+    def get_incline(self):
+        print("Self ble incline: ", self.ble_incline)
+        return self.ble_incline
+    
+    def get_resistance(self):
+        #global ble_resistance
+        print("Self ble resistance: ", self.ble_resistance)
+        return self.ble_resistance
+    
+    def send_udp_data_to_rizer(self, incline_data):
+        # Create a dictionary with the required parameters
+        data = {
+            "rizerIncline": float(incline_data),
+        }
+        print(data)
+        # Convert dictionary to JSON string
+        json_data = json.dumps(data)
+
         # Create a UDP socket
-        udp_unity_receive_ip = "127.0.0.1"
-        udp_unity_receive_port = 12345
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
+            # Send JSON data
+            udp_socket.sendto(json_data.encode(), (self.send_to_actuator_ip, self.send_to_rizer_port))
 
-        self.udp_unity_receive_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.udp_unity_receive_socket.bind((udp_unity_receive_ip, udp_unity_receive_port))
 
-        print("Listening for UDP data...")
+    def send_udp_data_to_headwind(self, fan_speed):
+        # Create a dictionary with the required parameters
+        data = {
+            "fanSpeed": float(fan_speed),
+        }
+        print(data)
+        # Convert dictionary to JSON string
+        json_data = json.dumps(data)
 
-    def start_udp_listener(self):
-        # Infinite loop to continuously receive data
-        try:
-            data, addr = self.udp_unity_receive_socket.recvfrom(1024)  # Buffer size is 1024 bytes  
+        # Create a UDP socket
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
+            # Send JSON data
+            udp_socket.sendto(json_data.encode(), (self.send_to_actuator_ip, self.send_to_headwind_port))
 
-            json_data = data.decode('utf-8')  # Decode bytes to string
-            # value = json.loads(data.decode())
-            unity_values = json.loads(json_data)
-            ble_fan_value = unity_values["bleFan"]
-            # print("ble fan from unity: ", ble_fan_value)
-            self.ble_fan_speed = ble_fan_value
-        except Exception as e:
-            print(f"Error while receiving UDP data: {e}")
+    def send_udp_data_to_direto(self, incline_data):
+        # Create a dictionary with the required parameters
+        data = {
+            "diretoResistance": float(incline_data),
+            #"rizerIncline": float(incline_data)
+        }
+        print(data)
+        # Convert dictionary to JSON string
+        json_data = json.dumps(data)
+
+        # Create a UDP socket
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
+            # Send JSON data
+            udp_socket.sendto(json_data.encode(), (self.send_to_actuator_ip, self.send_to_direto_port))
+
 
     def stop_udp_listener(self):
         if self.udp_unity_receive_socket:
             self.udp_unity_receive_socket.close()
             print("UDP listener stopped.")
-
-
-
+            
+            
 if __name__ == "__main__":
     '''
     try:
