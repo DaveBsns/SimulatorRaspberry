@@ -11,8 +11,8 @@ import time
 
 class DataSender:
     def __init__(self):
-        self.speed_value = 0
-        self.rotation_value = 0
+        # self.speed_value = 0
+        self.backwheel_speed = 0
         self.pedal_speed = 0
         self.steering_value = 0
         self.steering_angle = 0
@@ -21,12 +21,12 @@ class DataSender:
         self.roll_value = 0
         self.udp_unity_send_ip = "127.0.0.2" # IP of the computer running Unity (just the localhost ip if the script is running on the same computer than the simulation)
         self.udp_unity_send_port = 1337
-        
+
     def collect_speed(self, speed):
         self.speed_value = speed
 
-    def collect_rotation(self, rotation):
-        self.rotation_value = rotation
+    def collect_backwheel(self, backwheel):
+        self.backwheel_speed = backwheel
         
     def collect_pedal(self, pedal_speed):
         self.pedal_speed = pedal_speed
@@ -47,12 +47,11 @@ class DataSender:
     def collect_roll(self, roll):
         self.roll_value = roll
 
-    def send_unity_data_udp(self, speed_data, rotation_data, pedal_speed, steering_data, brake_data, bno_data, roll_data, steering_angle):
+    def send_unity_data_udp(self, backwheel_speed, pedal_speed, steering_data, brake_data, bno_data, roll_data, steering_angle):
         
         # Create a dictionary with the required parameters
         data = {
-            "diretoSpeed": float(speed_data),
-            "rotationValue": float(rotation_data),
+            "backwheelSpeed": float(backwheel_speed),
             "pedalSpeed": float(pedal_speed),
             "rizerSteering": float(steering_data),
             "espBno": float(bno_data),
@@ -181,7 +180,7 @@ if __name__ == "__main__":
 
     while True:
         # print("udp_direto_socket: ", udp_direto_socket)
-        data_sender.send_unity_data_udp(data_sender.speed_value, data_sender.rotation_value, data_sender.pedal_speed, data_sender.steering_value, data_sender.brake_value, data_sender.bno_value, data_sender.roll_value, data_sender.steering_angle)
+        data_sender.send_unity_data_udp(data_sender.backwheel_speed, data_sender.pedal_speed, data_sender.steering_value, data_sender.brake_value, data_sender.bno_value, data_sender.roll_value, data_sender.steering_angle)
         readable, _, _ = select.select([udp_rizer_socket, udp_rotation_socket, udp_direto_socket, udp_brake_socket, udp_bno_socket, udp_roll_socket, udp_steering_angle_socket], [], [])
 
         for sock in readable:
@@ -196,10 +195,10 @@ if __name__ == "__main__":
                 data_sender.collect_speed(speed_value)
             elif sock is udp_rotation_socket:
                 rotation_dict = json.loads(data.decode())
-                rotation_value = rotation_dict["speed"]
+                backwheel_speed = rotation_dict["speed"]
                 pedal_speed = rotation_dict["pedal"]
-                # print("ROTATION: ", rotation_value)
-                data_sender.collect_rotation(rotation_value)
+                # print("Backwheel_Speed: ", backwheel_speed)
+                data_sender.collect_backwheel(backwheel_speed)
                 data_sender.collect_pedal(pedal_speed)
             elif sock is udp_brake_socket:
                 brake_value = json.loads(data.decode())
