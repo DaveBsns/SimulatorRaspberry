@@ -20,7 +20,6 @@ class DataSender:
         self.bno_value = 0
         self.roll_value = 0
         self.udp_unity_send_ip = "127.0.0.2" # IP of the computer running Unity (just the localhost ip if the script is running on the same computer than the simulation)
-        # self.udp_unity_send_ip = "10.30.77.221" # IP of the computer running Unity
         self.udp_unity_send_port = 1337
 
     def collect_speed(self, speed):
@@ -209,11 +208,7 @@ if __name__ == "__main__":
     udp_steering_angle_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     udp_steering_angle_socket.bind((UDP_ESP_IP, UPD_PORT_STEERING_ANGLE))
 
-    # udp_unity_receive_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    # udp_unity_receive_socket.bind((UDP_IP_UNITY_RECEIVE, UDP_PORT_UNITY_RECEIVE))
 
-    
-    
     while True:
         # print("udp_direto_socket: ", udp_direto_socket)
         data_sender.send_unity_data_udp(data_sender.backwheel_speed, data_sender.pedal_speed, data_sender.steering_value, data_sender.brake_value, data_sender.bno_value, data_sender.roll_value, data_sender.steering_angle)
@@ -256,3 +251,4 @@ if __name__ == "__main__":
                 # print("Roll_Value: ", roll_value)
                 steering_value = steering_value["angle"]
                 data_sender.collect_steering_angle(steering_value)
+

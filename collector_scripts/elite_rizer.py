@@ -199,3 +199,4 @@ if __name__ == "__main__":
     # Create an instance of Rizer and run the main control loop
     rizer = Rizer()
     asyncio.run(rizer.main())
+
