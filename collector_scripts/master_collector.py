@@ -238,7 +238,7 @@ if __name__ == "__main__":
                 data_sender.collect_pedal(pedal_speed)
             elif sock is udp_brake_socket:
                 brake_value = json.loads(data.decode())
-                brake_value = brake_value["sensor_value"]
+                brake_value = brake_value["angle"]
                 # print("Brake_value: ", brake_value)
                 data_sender.collect_brake(brake_value)
             elif sock is udp_bno_socket:
