@@ -3,99 +3,104 @@
 #include <WiFiUdp.h>
 #include <ArduinoJson.h>
 
-// HALL EFFECT SENSOR
-const int HALL_PIN = 32; // Pin connected to the brake sensor
+// Pins
+const int HALL_PIN = 32;
+const int SWITCH_PIN = 18;
+const int LED_PIN = 19;
 
-// WIFI CONFIGURATION
-const char *ssid = "Bicycle_Simulator_Network"; // WiFi network SSID
-const char *password = "17701266";             // WiFi network password
-unsigned int localUdpPort = 7777;              // UDP port for communication
+// WiFi Config
+const char *ssid = "Bicycle_Simulator_Network";
+const char *password = "17701266";
+unsigned int localUdpPort = 7777;
+WiFiUDP udp;
 
-// SWITCH AND LED CONFIGURATION
-const int switchPin = 18;  // Pin connected to the control switch
-const int ledPin = 19;     // Pin connected to the indicator LED
-int switchState = 0;       // Current state of the switch
-int delayTime = 1000;      // Delay time for the main loop
+// UDP target
+const char *udpAddress = "192.168.0.101";  // <-- Change this if needed
+const unsigned int udpPort = 7777;
 
-WiFiUDP udp; // UDP instance for communication
+// State variables
+bool lastSwitchState = HIGH;  // Using INPUT_PULLUP, HIGH = OFF
+bool active = false;
+float offset = 0.0;
 
-void setup()
-{
-  // SWITCH AND LED SETUP
-  pinMode(switchPin, INPUT_PULLUP); // Configure switch pin as input with pull-up
-  pinMode(ledPin, OUTPUT);          // Configure LED pin as output
-  digitalWrite(ledPin, LOW);        // Turn off the LED initially
+void setup() {
+  // Pins
+  pinMode(HALL_PIN, INPUT_PULLUP);
+  pinMode(SWITCH_PIN, INPUT_PULLUP);
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, LOW);
 
-  // HALL EFFECT SENSOR SETUP
-  pinMode(HALL_PIN, INPUT_PULLUP);  // Configure the hall effect sensor pin as input
-  delay(1000);                      // Initial delay for stability
+  // Serial
+  Serial.begin(115200);
 
-  // WIFI SETUP
-  WiFi.hostname("Brake_ESP");       // Set the device hostname
-  Serial.begin(115200);             // Initialize serial communication for debugging
-  WiFi.begin(ssid, password);       // Begin WiFi connection
-
-  while (WiFi.status() != WL_CONNECTED)
-  {
-    delay(1000);                    // Retry every second until connected
-    Serial.println("Connecting with WiFi");
+  // WiFi
+  WiFi.hostname("Brake_ESP");
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.println("Connecting with WiFi...");
   }
+  Serial.println("Connected to WiFi.");
+  udp.begin(localUdpPort);
 
-  Serial.println("Connection with WiFi successful");
-  udp.begin(localUdpPort);          // Initialize UDP communication
+  delay(1000);  // Let sensor settle
 }
 
-void loop()
-{
-  // READ HALL EFFECT SENSOR VALUE
-  int sensorValue = analogRead(HALL_PIN); // Read the sensor value
-  StaticJsonDocument<500> doc;           // Create a JSON document for data transmission
-  String jsonStr;
+void loop() {
+  bool currentSwitchState = digitalRead(SWITCH_PIN);
 
-  // Populate JSON with sensor data
-  doc["sensor"] = "Brake";          // Identify this as the brake sensor
-  doc["sensor_value"] = sensorValue; // Current brake sensor value
-  Serial.print("Sensor Value: ");
-  Serial.println(sensorValue);
-
-  serializeJson(doc, jsonStr);      // Serialize JSON data into a string
-
-  // READ INCOMING UDP MESSAGES
-  int packetSize = udp.parsePacket();
-  if (packetSize)
-  {
-    char packetBuffer[255];
-    udp.read(packetBuffer, packetSize); // Read the incoming packet
-
-    Serial.print("Received message: ");
-    Serial.println(packetBuffer);      // Print the received message
+  // Detect switch going from OFF to ON
+  if (lastSwitchState == HIGH && currentSwitchState == LOW) {
+    active = true;
+    digitalWrite(LED_PIN, HIGH); // LED ON
+    int sensorValue = analogRead(HALL_PIN);
+    offset = (1.0 - ((float)sensorValue / 4095.0)) * 360.0;
+    Serial.print("Switch ON: Offset set to ");
+    Serial.println(offset);
   }
 
-  // SEND SENSOR DATA BASED ON SWITCH STATE
-  if (switchState == 0) {
-    if (sensorValue > 10) {             // Send data if sensor value exceeds threshold
-      udp.beginPacket("192.168.0.101", 7777); // Send to the main VR PC
-      udp.print(jsonStr);
-      udp.endPacket();
+  // Detect switch going from ON to OFF
+  if (lastSwitchState == LOW && currentSwitchState == HIGH) {
+    active = false;
+    digitalWrite(LED_PIN, LOW); // LED OFF
+    Serial.println("Switch OFF: Sensor reading paused");
+  }
+
+  lastSwitchState = currentSwitchState;
+
+  if (active) {
+    int sensorValue = analogRead(HALL_PIN);
+
+    // Reversed direction: 0 = 360°, 4095 = 0°
+    float angle = (1.0 - ((float)sensorValue / 4095.0)) * 360.0;
+
+    // Apply offset (allow negative values)
+    angle -= offset;
+
+    // Optional: Only send if angle is positive
+    if (angle < 0) {
+      angle = 0.0;
     }
-  } else {
-    udp.beginPacket("192.168.0.101", 7777); // Always send data when switch is active
+
+    // Print
+    Serial.print("Sensor Value: ");
+    Serial.print(sensorValue);
+    Serial.print(" | Relative Angle: ");
+    Serial.println(angle);
+
+    // Prepare JSON
+    StaticJsonDocument<200> doc;
+    doc["sensor"] = "Brake";
+    doc["angle"] = angle;
+    String jsonStr;
+    serializeJson(doc, jsonStr);
+
+    // Send via UDP
+    udp.beginPacket(udpAddress, udpPort);
     udp.print(jsonStr);
     udp.endPacket();
   }
 
-  // UPDATE SWITCH STATE AND LED
-  switchState = digitalRead(switchPin); // Read the current switch state
-
-  if (switchState == LOW) {
-    Serial.println("Switch is pressed - LED ON");
-    digitalWrite(ledPin, HIGH);  // Turn the LED on when switch is pressed
-    delayTime = 50;              // Shorten delay for faster response
-  } else {
-    Serial.println("Switch is not pressed - LED OFF");
-    digitalWrite(ledPin, LOW);   // Turn the LED off when switch is not pressed
-    delayTime = 1000;            // Lengthen delay for slower updates
-  }
-
-  delay(delayTime);              // Wait for the configured delay time
+  delay(50); // Sampling rate
 }
+
