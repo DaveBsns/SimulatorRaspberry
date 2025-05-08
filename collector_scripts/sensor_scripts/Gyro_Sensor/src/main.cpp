@@ -1,84 +1,100 @@
 #include <Arduino.h>
-
+#include <Wire.h>
 #include <WiFi.h>
 #include <WiFiUdp.h>
-
-#include "BNO055_support.h"
-#include <Wire.h>
-
 #include <ArduinoJson.h>
+#include "BNO055_support.h"
 
+// WiFi and UDP config
 const char *ssid = "Bicycle_Simulator_Network";
 const char *password = "17701266";
-unsigned int localUdpPort = 8888;
+const unsigned int localUdpPort = 8888;
+const char *udpTargetIp = "192.168.0.101"; // Destination
+const unsigned int udpTargetPort = 8888;
 
 WiFiUDP udp;
 
 struct bno055_t myBNO;
-struct bno055_euler myEulerData; // Structure to hold the Euler data
-struct bno055_gyro myGyroData;	 // Structure to hold the Gyro data
+struct bno055_euler myEulerData;
 
-unsigned long lastTime = 0;
+float headingOffset = 0.0;
+float rollOffset = 0.0;
+float pitchOffset = 0.0;
 
-void setup()
-{
-	// Initialize I2C communication
-	Wire.begin();
+void connectToWiFi() {
+    WiFi.begin(ssid, password);
+    Serial.print("Connecting to WiFi");
 
-	// Create a static buffer for framing BME280 sensor data with ESP32 chip ID.
+    int retries = 0;
+    while (WiFi.status() != WL_CONNECTED && retries < 20) {
+        delay(500);
+        Serial.print(".");
+        retries++;
+    }
 
-	// Initialization of the BNO055
-	BNO_Init(&myBNO); // Assigning the structure to hold information about the device
-
-	// Configuration to NDoF mode
-	bno055_set_operation_mode(OPERATION_MODE_NDOF);
-
-	delay(1);
-
-	Serial.begin(115200);
-	WiFi.hostname("Gyro_ESP");
-	WiFi.begin(ssid, password);
-
-	while (WiFi.status() != WL_CONNECTED)
-	{
-		delay(1000); // setting sending rate
-		Serial.println("Connecting with WiFi");
-	}
-
-	Serial.println("Connection with WiFi successful");
-
-	udp.begin(localUdpPort);
+    if (WiFi.status() == WL_CONNECTED) {
+        Serial.println("\nWiFi connected.");
+        Serial.print("IP Address: ");
+        Serial.println(WiFi.localIP());
+        udp.begin(localUdpPort);
+    } else {
+        Serial.println("\nFailed to connect to WiFi.");
+    }
 }
 
-void loop()
-{
-	bno055_read_euler_hrp(&myEulerData); // Update Euler data into the structure
-	StaticJsonDocument<500> doc;
+void setup() {
+	delay(1000); // Give some time for the serial monitor to open
+    Wire.begin();
+    Serial.begin(115200);
 
-	int packetSize = udp.parsePacket();
+    // Sensor init
+    BNO_Init(&myBNO);
+    bno055_set_operation_mode(OPERATION_MODE_NDOF);
+    delay(100);
 
-	// Method for receiving data
-	if (packetSize)
-	{
-		char packetBuffer[255];
-		udp.read(packetBuffer, packetSize);
+    bno055_read_euler_hrp(&myEulerData);
+    headingOffset = myEulerData.h / 16.0;
+    rollOffset = myEulerData.r / 16.0;
+    pitchOffset = myEulerData.p / 16.0;
 
-		Serial.print("Received message: ");
-		Serial.println(packetBuffer);
-	}
+    Serial.println("Initial Offsets:");
+    Serial.print("Heading: "); Serial.println(headingOffset);
+    Serial.print("Roll: "); Serial.println(rollOffset);
+    Serial.print("Pitch: "); Serial.println(pitchOffset);
 
-	// Creating JSON for sensor data
-	String jsonStr;
-	doc["sensor"] = "BNO055";
-	doc["euler_h"] = ((myEulerData.h) / 16.00);
-	doc["euler_r"] = ((myEulerData.r) / 16.00);
-	doc["euler_p"] = ((myEulerData.p) / 16.00);
+    connectToWiFi();
+}
 
-	serializeJson(doc, jsonStr);
+void loop() {
+    // Auto-reconnect WiFi if dropped
+    if (WiFi.status() != WL_CONNECTED) {
+        Serial.println("WiFi disconnected. Attempting reconnect...");
+        connectToWiFi();
+        delay(2000);
+        return;
+    }
 
-	udp.beginPacket("192.168.0.101", 8888);
-	udp.print(jsonStr);
-	udp.endPacket();
+    bno055_read_euler_hrp(&myEulerData);
+    float relHeading = (myEulerData.h / 16.0) - headingOffset;
+    float relRoll = (myEulerData.r / 16.0) - rollOffset;
+    float relPitch = (myEulerData.p / 16.0) - pitchOffset;
 
-	delay(10);
+    StaticJsonDocument<256> doc;
+    doc["sensor"] = "BNO055";
+    doc["euler_h"] = relHeading;
+    doc["euler_r"] = relRoll;
+    doc["euler_p"] = relPitch;
+
+    String jsonStr;
+    serializeJson(doc, jsonStr);
+
+    int result = udp.beginPacket(udpTargetIp, udpTargetPort);
+    if (result) {
+        udp.print(jsonStr);
+        udp.endPacket();
+    } else {
+        Serial.println("⚠️ Failed to start UDP packet.");
+    }
+
+    delay(10);
 }
