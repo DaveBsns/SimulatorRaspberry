@@ -93,7 +93,7 @@ void loop() {
         udp.print(jsonStr);
         udp.endPacket();
     } else {
-        Serial.println("⚠️ Failed to start UDP packet.");
+        Serial.println("Failed to start UDP packet.");
     }
 
     delay(10);
