@@ -41,7 +41,7 @@ const int maxDegrees = 360;
 const int SDA_PIN = 18;
 const int SCL_PIN = 19;
 
-//reused variables
+// Reused variables
 unsigned long loopStartTime;
 unsigned long loopEndTime;
 unsigned long executionTime;
@@ -53,35 +53,19 @@ int turnDirection = 0;
 int lastTurnDirection = 0;
 int nextBit = 0;
 int angleTolerance = 0;
-
-
 int readValues = 0;
 
-void AddToBuffer(int val) {
-  directionBuffer = (directionBuffer << 1) | (val & 1);
-}
+// ==== Function declarations (prototypes) ====
+void AddToBuffer(int val);
+int countOnes(uint64_t n);
+void printBufferBits();
+void averageAngle();
+void getRotation();
+float readAngle();
+double meanAngle(const float angles[], int size);
+void printArray(const float arr[], int size);
 
-int countOnes(uint64_t n)
-{
-  unsigned int c; // the total bits set in n
-  for (c = 0; n; n = n & (n-1))
-  {
-    c++;
-  }
-  return c;
-}
-
-void printBufferBits() {
-    int i;
-    // The number of bits in a uint64_t is 64
-    for (i = 63; i >= 0; i--) {
-        // Check the i-th bit using bitwise AND
-        uint64_t bit = (directionBuffer >> i) & 1;
-        Serial.print((int)bit);
-    }
-    Serial.println(); // Print a new line after all bits
-}
-
+// ==== Setup and loop ====
 void setup() {
   Wire.begin(SDA_PIN, SCL_PIN);
   Serial.begin(115200);
@@ -142,48 +126,71 @@ void loop() {
   }
 }
 
+// ==== Function definitions ====
+
+void AddToBuffer(int val) {
+  directionBuffer = (directionBuffer << 1) | (val & 1);
+}
+
+int countOnes(uint64_t n)
+{
+  unsigned int c;
+  for (c = 0; n; n = n & (n-1)) {
+    c++;
+  }
+  return c;
+}
+
+void printBufferBits() {
+  for (int i = 63; i >= 0; i--) {
+    uint64_t bit = (directionBuffer >> i) & 1;
+    Serial.print((int)bit);
+  }
+  Serial.println();
+}
+
 void averageAngle() {
   loopStartTime = millis();
   float angleReadings[iterationCount];
 
   for (int it = 0; it < iterationCount; ++it) {
     float angle = readAngle();
-
-    // Check if readAngle encountered an error
     if (isnan(angle)) {
       Serial.print(" !Reading Error! ");
-      continue;  // Skip the rest of the loop if there's an error
+      continue;
     }
     angleReadings[it] = angle;
-    if(iterationPadding > 0)delay(iterationPadding);
+    if (iterationPadding > 0) delay(iterationPadding);
   }
 
   int readValuesSize = sizeof(angleReadings) / sizeof(angleReadings[0]);
-  // Calculate the mean angle using the array of readings
   float averagedAngle = meanAngle(angleReadings, readValuesSize);
 
-  if(debugging){
+  if (debugging) {
     Serial.println("");
     Serial.print("Raw values: ");
     Serial.println(readValuesSize);
     printArray(angleReadings, readValuesSize);
   }
-  if(printResult) {
+
+  if (printResult) {
     Serial.print("Angle: ");
-    Serial.println(averagedAngle, 3);  // Print with 3 decimal places
+    Serial.println(averagedAngle, 3);
   }
+
   loopEndTime = millis();
   executionTime = loopEndTime - loopStartTime;
-  
-  if(debugging) {
+
+  if (debugging) {
     Serial.print("execution time: ");
     Serial.println(executionTime);
   }
-  if(executionTime <= loopTime) {
+
+  if (executionTime <= loopTime) {
     delay((float)(loopTime - executionTime));
   } else {
-    if(debugging) {
-      Serial.println("Cant keep up! Execution time of " + (String)executionTime + "ms is " + (String) (executionTime - loopTime) + "ms over the budget!");
+    if (debugging) {
+      Serial.println("Cant keep up! Execution time of " + (String)executionTime + "ms is " + (String)(executionTime - loopTime) + "ms over the budget!");
     } else {
       Serial.println(" Device Slowdown!");
     }
@@ -191,86 +198,67 @@ void averageAngle() {
 }
 
 float readAngle() {
-  // Request the high byte from the specified register of the device
   Wire.beginTransmission(deviceAddress);
   Wire.write(registerAddressHigh);
   int transmissionStatusHigh = Wire.endTransmission();
-
   if (transmissionStatusHigh != 0) {
     Serial.print("Error in I2C transmission (high byte). Status: ");
     Serial.println(transmissionStatusHigh);
-    return NAN;  // Skip the rest of the loop if there's an error
+    return NAN;
   }
 
   Wire.requestFrom(deviceAddress, 1);
-
   while (Wire.available() < 1);
-
   byte highByte = Wire.read();
 
-  // Request the low byte from the specified register of the device
   Wire.beginTransmission(deviceAddress);
   Wire.write(registerAddressLow);
   int transmissionStatusLow = Wire.endTransmission();
-
   if (transmissionStatusLow != 0) {
     Serial.print("Error in I2C transmission (low byte). Status: ");
     Serial.println(transmissionStatusLow);
-    return NAN;  // Skip the rest of the loop if there's an error
+    return NAN;
   }
 
   Wire.requestFrom(deviceAddress, 1);
-
   while (Wire.available() < 1);
-
   byte lowByte = Wire.read();
 
-  // Combine the high and low bytes to form a 12-bit value
   int sensorValue = (highByte << 8) | lowByte;
-
-  // Map the sensor value to degrees
   float degrees = (float(sensorValue) / maxSensorValue) * maxDegrees;
+  if (degrees == 360.0) degrees = 0.0;
 
-  // Check if the angle is exactly 360.0, and if so, set it to 0.0
-  if (degrees == 360.0) {
-    degrees = 0.0;
-  }
   readValues++;
   return degrees;
 }
 
-// Calculate the mean angle from -180 to 180 degrees
 double meanAngle(const float angles[], int size) {
   double x = 0.0;
   double y = 0.0;
-
   for (int i = 0; i < size; ++i) {
     x += cos(angles[i] * PI / 180);
     y += sin(angles[i] * PI / 180);
   }
-
   return (atan2(y, x) * 180 / PI) + 180;
 }
 
 void printArray(const float arr[], int size) {
   Serial.print("[");
   for (int i = 0; i < size; ++i) {
-    Serial.print(arr[i], 3);  // Print each element with 3 decimal places
-    if (i < size - 1) {
-      Serial.print(", ");
-    }
+    Serial.print(arr[i], 3);
+    if (i < size - 1) Serial.print(", ");
   }
   Serial.println("]");
 }
 
 void getRotation() {
   float newAngle = readAngle();
-  if(newAngle > lastReadAngle + angleTolerance) {
+  if (newAngle > lastReadAngle + angleTolerance) {
     AddToBuffer(1);
-  } else if(newAngle < lastReadAngle - angleTolerance) {
+  } else if (newAngle < lastReadAngle - angleTolerance) {
     AddToBuffer(0);
   } else {
-    nextBit = (nextBit + 1) % 2; //Add 1 and 0 in equal amounts
+    nextBit = (nextBit + 1) % 2;
     AddToBuffer(nextBit);
   }
 
@@ -278,22 +266,28 @@ void getRotation() {
 
   int ones = countOnes(directionBuffer);
   int zeroes = 64 - ones;
-  if(debugging) {
+
+  if (debugging) {
     Serial.println("Zeroes count: " + (String)zeroes + ", Ones count: " + (String)ones + ".");
   }
-  int sensitivity = (lastTurnDirection == -1 || lastTurnDirection == 1) ? turnSensitivityDeactivation : turnSensitivityActivation;
-  if(ones > 64 - sensitivity) turnDirection = 1;
-  else if(ones <= sensitivity) turnDirection = -1;
+
+  int sensitivity = (lastTurnDirection == -1 || lastTurnDirection == 1)
+                      ? turnSensitivityDeactivation
+                      : turnSensitivityActivation;
+
+  if (ones > 64 - sensitivity) turnDirection = 1;
+  else if (ones <= sensitivity) turnDirection = -1;
   else turnDirection = 0;
-  
-  if(printResult && lastTurnDirection != turnDirection) {
+
+  if (printResult && lastTurnDirection != turnDirection) {
     lastTurnDirection = turnDirection;
-    if(turnDirection == 1) Serial.println("Turning clockwise...");
-    else if(turnDirection == -1) Serial.println("Turning counter-clockwise...");
-    else if(turnDirection == 0) Serial.println("Not turning...");
+    if (turnDirection == 1) Serial.println("Turning clockwise...");
+    else if (turnDirection == -1) Serial.println("Turning counter-clockwise...");
+    else if (turnDirection == 0) Serial.println("Not turning...");
   }
-  if(millis() - loopStartTime > 10000){
-    Serial.println("Rate of "+(String)(readValues / 10)+" values per second.");
+
+  if (millis() - loopStartTime > 10000) {
+    Serial.println("Rate of " + (String)(readValues / 10) + " values per second.");
     loopStartTime = millis();
     readValues = 0;
   }
