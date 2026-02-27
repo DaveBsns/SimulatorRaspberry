@@ -3,6 +3,7 @@ import struct
 from bleak import BleakClient, BleakScanner
 
 # Replace with the name of your BLE device
+
 DEVICE_NAME = "DIRETO XR"
 CHARACTERISTIC_RESISTANCE_UUID = "00002ad9-0000-1000-8000-00805f9b34fb"
 CHARACTERISTIC_NOTIFY_UUID = "00002ad2-0000-1000-8000-00805f9b34fb"
