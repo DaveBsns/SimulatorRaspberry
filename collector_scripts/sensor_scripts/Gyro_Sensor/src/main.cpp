@@ -50,7 +50,7 @@ void setup() {
     // Sensor init
     BNO_Init(&myBNO);
     bno055_set_operation_mode(OPERATION_MODE_NDOF);
-    delay(100);
+    delay(500);
 
     bno055_read_euler_hrp(&myEulerData);
     headingOffset = myEulerData.h / 16.0;
