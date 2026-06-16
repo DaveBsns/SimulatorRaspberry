@@ -1,0 +1,410 @@
+{
+  "00001800-0000-1000-8000-00805f9b34fb": [
+    {
+      "uuid": "00002a00-0000-1000-8000-00805f9b34fb",
+      "properties": [
+        "read",
+        "write"
+      ],
+      "data": [
+        [
+          82,
+          73,
+          90,
+          69,
+          82
+        ]
+      ]
+    },
+    {
+      "uuid": "00002a01-0000-1000-8000-00805f9b34fb",
+      "properties": [
+        "read"
+      ],
+      "data": [
+        [
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "uuid": "00002a04-0000-1000-8000-00805f9b34fb",
+      "properties": [
+        "read"
+      ],
+      "data": [
+        [
+          24,
+          0,
+          48,
+          0,
+          0,
+          0,
+          144,
+          1
+        ]
+      ]
+    },
+    {
+      "uuid": "00002aa6-0000-1000-8000-00805f9b34fb",
+      "properties": [
+        "read"
+      ],
+      "data": [
+        [
+          1
+        ]
+      ]
+    }
+  ],
+  "00001801-0000-1000-8000-00805f9b34fb": [
+    {
+      "uuid": "00002a05-0000-1000-8000-00805f9b34fb",
+      "properties": [
+        "indicate"
+      ],
+      "data": [],
+      "error": "Could not read characteristic handle 11: Protocol Error 0x02: Read Not Permitted"
+    }
+  ],
+  "0000180a-0000-1000-8000-00805f9b34fb": [
+    {
+      "uuid": "00002a29-0000-1000-8000-00805f9b34fb",
+      "properties": [
+        "read"
+      ],
+      "data": [
+        [
+          69,
+          108,
+          105,
+          116,
+          101
+        ]
+      ]
+    },
+    {
+      "uuid": "00002a25-0000-1000-8000-00805f9b34fb",
+      "properties": [
+        "read"
+      ],
+      "data": [
+        [
+          56,
+          48,
+          57
+        ]
+      ]
+    },
+    {
+      "uuid": "00002a27-0000-1000-8000-00805f9b34fb",
+      "properties": [
+        "read"
+      ],
+      "data": [
+        [
+          51
+        ]
+      ]
+    },
+    {
+      "uuid": "00002a26-0000-1000-8000-00805f9b34fb",
+      "properties": [
+        "read"
+      ],
+      "data": [
+        [
+          50,
+          52
+        ]
+      ]
+    },
+    {
+      "uuid": "00002a28-0000-1000-8000-00805f9b34fb",
+      "properties": [
+        "read"
+      ],
+      "data": [
+        [
+          50,
+          52
+        ]
+      ]
+    }
+  ],
+  "0000fe59-0000-1000-8000-00805f9b34fb": [
+    {
+      "uuid": "8ec90003-f315-4f60-9fb8-838830daea50",
+      "properties": [
+        "write",
+        "indicate"
+      ],
+      "data": [
+        []
+      ]
+    }
+  ],
+  "347b0001-7635-408b-8918-8ff3949ce592": [
+    {
+      "uuid": "347b0012-7635-408b-8918-8ff3949ce592",
+      "properties": [
+        "write"
+      ],
+      "data": [],
+      "error": "Could not read characteristic handle 30: Protocol Error 0x02: Read Not Permitted"
+    },
+    {
+      "uuid": "347b0013-7635-408b-8918-8ff3949ce592",
+      "properties": [
+        "read"
+      ],
+      "data": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "uuid": "347b0014-7635-408b-8918-8ff3949ce592",
+      "properties": [
+        "notify"
+      ],
+      "data": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "uuid": "347b0016-7635-408b-8918-8ff3949ce592",
+      "properties": [
+        "write"
+      ],
+      "data": [],
+      "error": "Could not read characteristic handle 37: Protocol Error 0x02: Read Not Permitted"
+    },
+    {
+      "uuid": "347b0017-7635-408b-8918-8ff3949ce592",
+      "properties": [
+        "notify"
+      ],
+      "data": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "uuid": "347b0019-7635-408b-8918-8ff3949ce592",
+      "properties": [
+        "read"
+      ],
+      "data": [
+        [
+          0,
+          228,
+          1,
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "uuid": "347b0030-7635-408b-8918-8ff3949ce592",
+      "properties": [
+        "notify"
+      ],
+      "data": [
+        [
+          224,
+          231,
+          167,
+          192
+        ]
+      ]
+    },
+    {
+      "uuid": "347b0031-7635-408b-8918-8ff3949ce592",
+      "properties": [
+        "write"
+      ],
+      "data": [],
+      "error": "Could not read characteristic handle 47: Protocol Error 0x02: Read Not Permitted"
+    },
+    {
+      "uuid": "347b0032-7635-408b-8918-8ff3949ce592",
+      "properties": [
+        "indicate"
+      ],
+      "data": [
+        []
+      ]
+    },
+    {
+      "uuid": "347b0022-7635-408b-8918-8ff3949ce592",
+      "properties": [
+        "notify"
+      ],
+      "data": [
+        [
+          0,
+          100,
+          129,
+          60
+        ]
+      ]
+    },
+    {
+      "uuid": "347b0020-7635-408b-8918-8ff3949ce592",
+      "properties": [
+        "write"
+      ],
+      "data": [],
+      "error": "Could not read characteristic handle 55: Protocol Error 0x02: Read Not Permitted"
+    },
+    {
+      "uuid": "347b0021-7635-408b-8918-8ff3949ce592",
+      "properties": [
+        "indicate"
+      ],
+      "data": [
+        []
+      ]
+    }
+  ]
+}
