@@ -208,3 +208,5 @@ pip-selfcheck.json
 
 # MacOS hidden files
 .DS_Store
+
+config/
