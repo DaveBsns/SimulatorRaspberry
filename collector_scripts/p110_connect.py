@@ -1,9 +1,31 @@
 from PyP100 import PyP100
 import time
+from pathlib import Path
 
+def read_env_file(path: Path) -> dict[str, str]:
+    result = {}
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        result[key.strip()] = value.strip()
+    return result
+
+project_root_path = Path(__file__).resolve().parent.parent
+env_cred = read_env_file(project_root_path / "config" / "credentials.env")
+env_ip = read_env_file(project_root_path / "config" / "ip_list.env")
+
+ip = env_ip.get("P110_IP")
+username = env_cred.get("P110_USERNAME")
+password = env_cred.get("P110_PASSWORD")
+
+print(ip, username, password)
 
 def connect_and_start_p100():
-	p100 = PyP100.P100("192.168.0.110", "unitylab.hhn3@gmail.com", "Unitylab") #Creates a P100 plug object
+	p100 = PyP100.P100(ip, username, password) #Creates a P100 plug object
 	# p100.handshake() #Creates the cookies required for further methods
 	# p100.login()
 	print("Restarting P100 Power Outlet")
